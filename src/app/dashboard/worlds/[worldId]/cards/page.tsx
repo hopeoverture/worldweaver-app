@@ -3,15 +3,15 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Search, LayoutGrid, List } from 'lucide-react'
+import { Plus, LayoutGrid, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Loading } from '@/components/ui/loading'
 import { supabaseService } from '@/lib/supabase/service'
 import { useToastHelpers } from '@/contexts/toast-context'
 import { useAuth } from '@/contexts/auth-context'
 import FolderSidebar from '@/components/folders/folder-sidebar'
 import { CreateCardModal, EditCardModal, CardGridItem } from '@/components/cards'
+import { SearchInterface, type SearchFilters } from '@/components/search/search-interface'
 import type { World, Card, CardType, Folder } from '@/types/entities'
 
 export default function CardsPage() {
@@ -26,11 +26,20 @@ export default function CardsPage() {
   const [loading, setLoading] = useState(true)
   const [cardsLoading, setCardsLoading] = useState(false)
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
+  
+  // Search filters state
+  const [searchFilters, setSearchFilters] = useState<SearchFilters>({
+    query: '',
+    cardTypeIds: [],
+    folderIds: [],
+    tags: [],
+    sortBy: 'updated_at',
+    sortOrder: 'desc'
+  })
 
   const { user, loading: authLoading } = useAuth()
   const { error, success } = useToastHelpers()
@@ -60,11 +69,18 @@ export default function CardsPage() {
     
     try {
       setCardsLoading(true)
+      
+      // Convert SearchFilters to SearchParams
       const params = {
-        folder_ids: selectedFolderId ? [selectedFolderId] : undefined,
-        query: searchQuery || undefined,
+        query: searchFilters.query || undefined,
+        type_ids: searchFilters.cardTypeIds.length > 0 ? searchFilters.cardTypeIds : undefined,
+        folder_ids: selectedFolderId ? [selectedFolderId] : 
+                   searchFilters.folderIds.length > 0 ? searchFilters.folderIds : undefined,
+        sort_by: searchFilters.sortBy,
+        sort_order: searchFilters.sortOrder,
         limit: 50
       }
+      
       const response = await supabaseService.card.getCards(worldId, params)
       setCards(response.data)
     } catch (err) {
@@ -73,7 +89,7 @@ export default function CardsPage() {
     } finally {
       setCardsLoading(false)
     }
-  }, [user, worldId, selectedFolderId, searchQuery])
+  }, [user, worldId, selectedFolderId, searchFilters])
 
   const loadCardTypes = useCallback(async () => {
     try {
@@ -102,7 +118,6 @@ export default function CardsPage() {
       const loadInitialData = async () => {
         await Promise.all([
           loadWorld(),
-          loadCards(),
           loadCardTypes(),
           loadFolders()
         ])
@@ -111,10 +126,25 @@ export default function CardsPage() {
       
       loadInitialData()
     }
-  }, [worldId, authLoading, loadWorld, loadCards, loadCardTypes, loadFolders])
+  }, [worldId, authLoading, loadWorld, loadCardTypes, loadFolders])
+
+  // Load cards when search filters or folder selection changes
+  useEffect(() => {
+    if (worldId && !loading) {
+      const timeoutId = setTimeout(() => {
+        loadCards()
+      }, 300) // Debounce search
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [searchFilters, selectedFolderId, worldId, loading, loadCards])
 
   const handleFolderSelect = (folderId: string | null) => {
     setSelectedFolderId(folderId)
+    // Clear folder filters when selecting from sidebar
+    if (folderId) {
+      setSearchFilters(prev => ({ ...prev, folderIds: [] }))
+    }
   }
 
   const handleFolderChange = () => {
@@ -158,23 +188,13 @@ export default function CardsPage() {
     }
   }
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newQuery = e.target.value
-    setSearchQuery(newQuery)
-  }
-
-  // Reload cards when search or folder changes
-  useEffect(() => {
-    if (worldId) {
-      const timeoutId = setTimeout(() => {
-        loadCards()
-      }, 300) // Debounce search
-
-      return () => clearTimeout(timeoutId)
+  const handleSearchFiltersChange = (newFilters: SearchFilters) => {
+    setSearchFilters(newFilters)
+    // Clear sidebar selection if folder filters are used
+    if (newFilters.folderIds.length > 0 && selectedFolderId) {
+      setSelectedFolderId(null)
     }
-  }, [searchQuery, selectedFolderId, worldId, loadCards])
-
-  const filteredCards = cards;
+  }
 
   // Show loading while authenticating
   if (authLoading) {
@@ -207,34 +227,21 @@ export default function CardsPage() {
     <div className="h-screen flex flex-col">
       {/* Header */}
       <div className="border-b border-slate-700 bg-slate-900/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            {/* Breadcrumb */}
-            <div className="flex items-center space-x-2 text-sm text-slate-400">
-              <Link href="/dashboard/worlds" className="hover:text-slate-100">
-                Worlds
-              </Link>
-              <span>/</span>
-              <Link href={`/dashboard/worlds/${worldId}`} className="hover:text-slate-100">
-                {world?.title || 'Loading...'}
-              </Link>
-              <span>/</span>
-              <span className="text-slate-100 font-medium">Cards</span>
-            </div>
+        <div className="flex items-center justify-between mb-4">
+          {/* Breadcrumb */}
+          <div className="flex items-center space-x-2 text-sm text-slate-400">
+            <Link href="/dashboard/worlds" className="hover:text-slate-100">
+              Worlds
+            </Link>
+            <span>/</span>
+            <Link href={`/dashboard/worlds/${worldId}`} className="hover:text-slate-100">
+              {world?.title || 'Loading...'}
+            </Link>
+            <span>/</span>
+            <span className="text-slate-100 font-medium">Cards</span>
           </div>
           
           <div className="flex items-center space-x-3">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search cards..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="pl-10 w-64"
-              />
-            </div>
-            
             {/* View Toggle */}
             <div className="flex border border-slate-600 rounded-lg">
               <Button
@@ -262,6 +269,15 @@ export default function CardsPage() {
             </Button>
           </div>
         </div>
+
+        {/* Search Interface */}
+        <SearchInterface
+          filters={searchFilters}
+          onFiltersChange={handleSearchFiltersChange}
+          cardTypes={cardTypes}
+          folders={folders}
+          isLoading={cardsLoading}
+        />
       </div>
 
       {/* Main Content */}
@@ -288,23 +304,28 @@ export default function CardsPage() {
                 <div className="flex items-center justify-center py-4 mb-4">
                   <div className="flex items-center space-x-2 text-slate-400">
                     <div className="animate-spin h-4 w-4 border-2 border-slate-600 border-t-indigo-500 rounded-full"></div>
-                    <span className="text-sm">Loading cards...</span>
+                    <span className="text-sm">
+                      {searchFilters.query ? 'Searching...' : 'Loading cards...'}
+                    </span>
                   </div>
                 </div>
               )}
               
-              {!cardsLoading && filteredCards.length === 0 ? (
+              {!cardsLoading && cards.length === 0 ? (
                 <div className="text-center py-12">
                   <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Plus className="h-8 w-8 text-slate-400" />
                   </div>
                   <h3 className="text-lg font-medium text-slate-100 mb-2">
-                    {selectedFolderId ? 'No cards in this folder' : 'No cards yet'}
+                    {searchFilters.query ? 'No cards found' : 
+                     selectedFolderId ? 'No cards in this folder' : 'No cards yet'}
                   </h3>
                   <p className="text-slate-400 mb-6">
-                    {selectedFolderId 
-                      ? 'This folder is empty. Create your first card or move cards here.'
-                      : 'Get started by creating your first card.'
+                    {searchFilters.query 
+                      ? 'Try adjusting your search terms or filters.'
+                      : selectedFolderId 
+                        ? 'This folder is empty. Create your first card or move cards here.'
+                        : 'Get started by creating your first card.'
                     }
                   </p>
                   <Button onClick={() => setShowCreateModal(true)}>
@@ -318,7 +339,7 @@ export default function CardsPage() {
                     ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
                     : 'grid-cols-1'
                 } ${cardsLoading ? 'opacity-50' : ''}`}>
-                  {filteredCards.map((card) => (
+                  {cards.map((card) => (
                     <CardGridItem
                       key={card.id}
                       card={card}

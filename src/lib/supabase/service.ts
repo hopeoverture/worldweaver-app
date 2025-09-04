@@ -338,6 +338,11 @@ export const cardService = {
     try {
       console.log('getCards called with worldId:', worldId, 'params:', params)
       
+      // If there's a search query, use the search function for better relevance
+      if (params?.query && params.query.trim()) {
+        return await this.searchCards(worldId, params)
+      }
+      
       let query = supabase
         .from('cards')
         .select(`
@@ -355,10 +360,6 @@ export const cardService = {
       
       if (params?.folder_ids?.length) {
         query = query.in('folder_id', params.folder_ids)
-      }
-
-      if (params?.query) {
-        query = query.textSearch('name', params.query)
       }
 
       // Apply sorting
@@ -391,6 +392,65 @@ export const cardService = {
       }
     } catch (err) {
       console.error('Error in cardService.getCards:', JSON.stringify(err, null, 2))
+      throw err
+    }
+  },
+
+  async searchCards(worldId: string, params: SearchParams): Promise<PaginatedResponse<Card>> {
+    try {
+      console.log('searchCards called with worldId:', worldId, 'params:', params)
+      
+      const searchTerm = params.query?.trim() || ''
+      if (!searchTerm) {
+        return this.getCards(worldId, { ...params, query: undefined })
+      }
+
+      const { data, error } = await supabase
+        .rpc('search_cards', {
+          search_term: searchTerm,
+          target_world_id: worldId,
+          card_type_filter: params.type_ids?.[0] || null,
+          folder_filter: params.folder_ids?.[0] || null,
+          limit_count: params.limit || 50
+        })
+      
+      if (error) {
+        console.error('Search error:', error)
+        throw error
+      }
+
+      // Apply additional filters if multiple types/folders
+      let filteredData = data || []
+      
+      if (params.type_ids && params.type_ids.length > 1) {
+        filteredData = filteredData.filter((card: any) => 
+          params.type_ids!.includes(card.type_id)
+        )
+      }
+      
+      if (params.folder_ids && params.folder_ids.length > 1) {
+        filteredData = filteredData.filter((card: any) => 
+          params.folder_ids!.includes(card.folder_id)
+        )
+      }
+
+      // Apply pagination to search results
+      const page = params.page || 1
+      const limit = params.limit || 20
+      const from = (page - 1) * limit
+      const to = from + limit - 1
+      
+      const paginatedData = filteredData.slice(from, to + 1)
+      
+      return {
+        data: paginatedData,
+        total: filteredData.length,
+        page,
+        limit,
+        has_more: filteredData.length > to + 1
+      }
+    } catch (err) {
+      console.error('Error in cardService.searchCards:', err)
       throw err
     }
   },
@@ -515,12 +575,18 @@ export const cardService = {
 
 // Search utilities
 export const searchService = {
-  async searchCards(worldId: string, query: string, limit = 10): Promise<Card[]> {
+  async searchCards(worldId: string, searchTerm: string, options?: {
+    cardTypeFilter?: string
+    folderFilter?: string
+    limit?: number
+  }): Promise<Card[]> {
     const { data, error } = await supabase
       .rpc('search_cards', {
-        world_id: worldId,
-        search_query: query,
-        result_limit: limit
+        search_term: searchTerm,
+        target_world_id: worldId,
+        card_type_filter: options?.cardTypeFilter || null,
+        folder_filter: options?.folderFilter || null,
+        limit_count: options?.limit || 50
       })
     
     if (error) throw error

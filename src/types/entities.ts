@@ -246,7 +246,7 @@ export interface SearchParams {
   created_before?: string
   updated_after?: string
   updated_before?: string
-  sort_by?: 'name' | 'created_at' | 'updated_at' | 'position'
+  sort_by?: 'name' | 'title' | 'created_at' | 'updated_at' | 'position' | 'relevance'
   sort_order?: 'asc' | 'desc'
   page?: number
   limit?: number

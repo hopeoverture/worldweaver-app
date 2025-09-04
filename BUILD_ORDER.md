@@ -57,11 +57,11 @@
 
 ## Phase 3: Core Features (Weeks 7-9)
 
-### 3.1 Search & Filtering (Week 7)
-- [ ] Full-text search implementation
-- [ ] Filter by type, folder, tags, relationships
-- [ ] Saved searches functionality
-- [ ] Search results pagination
+### 3.1 Search & Filtering ✅ COMPLETE (Week 7)
+- [x] Full-text search implementation
+- [x] Filter by type, folder, tags, relationships
+- [x] Saved searches functionality
+- [x] Search results pagination
 
 ### 3.2 Relationships System (Week 7-8)
 - [ ] Card linking UI with search
