@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search, LayoutGrid, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import type { World, Card, CardType, Folder } from '@/types/entities'
 
 export default function CardsPage() {
   const params = useParams()
+  const router = useRouter()
   const worldId = params.worldId as string
   
   const [world, setWorld] = useState<World | null>(null)
@@ -29,9 +30,17 @@ export default function CardsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingCard, setEditingCard] = useState<Card | null>(null)
-  
+
   const { user, loading: authLoading } = useAuth()
   const { error, success } = useToastHelpers()
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/login')
+      return
+    }
+  }, [user, authLoading, router])
 
   const loadWorld = useCallback(async () => {
     try {
@@ -43,7 +52,7 @@ export default function CardsPage() {
       error('Failed to load world')
       console.error('Error loading world:', err)
     }
-  }, [worldId, error])
+  }, [worldId])
 
   const loadCards = useCallback(async () => {
     if (!user) return;
@@ -63,7 +72,7 @@ export default function CardsPage() {
     } finally {
       setLoading(false)
     }
-  }, [user, worldId, selectedFolderId, searchQuery, error])
+  }, [user, worldId, selectedFolderId, searchQuery])
 
   const loadCardTypes = useCallback(async () => {
     try {
@@ -73,7 +82,7 @@ export default function CardsPage() {
       console.error('Error loading card types:', err)
       error('Failed to load card types')
     }
-  }, [worldId, error])
+  }, [worldId])
 
   const loadFolders = useCallback(async () => {
     if (!user) return;
@@ -85,7 +94,7 @@ export default function CardsPage() {
       console.error('Error loading folders:', err)
       error('Failed to load folders')
     }
-  }, [user, worldId, error])
+  }, [user, worldId])
 
   useEffect(() => {
     if (worldId && !authLoading) {
@@ -155,7 +164,26 @@ export default function CardsPage() {
 
   const filteredCards = cards;
 
-  if (authLoading || (loading && !world)) {
+  // Show loading while authenticating
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loading />
+      </div>
+    )
+  }
+
+  // Redirect happens in useEffect, but show loading if no user
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loading />
+      </div>
+    )
+  }
+
+  // Show loading while data is loading
+  if (loading && !world) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loading />

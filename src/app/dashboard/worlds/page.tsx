@@ -45,7 +45,7 @@ export default function WorldsPage() {
   const handleWorldCreated = (newWorld: World) => {
     setWorlds(prev => [newWorld, ...prev])
     setShowCreateModal(false)
-    showSuccess('World created successfully!')
+    // Success toast is already shown in the modal
   }
 
   const handleDeleteWorld = async (world: World) => {

@@ -143,7 +143,13 @@ export default function CreateWorldModal({ isOpen, onClose, onWorldCreated }: Cr
   const handleSubmit = async () => {
     if (!user || !title.trim()) return
 
+    if (loading) {
+      // Prevent duplicate submissions
+      return
+    }
+
     setLoading(true)
+    
     try {
       const world = await supabaseService.world.createWorld({
         owner_id: user.id,

@@ -280,25 +280,14 @@ export const folderService = {
         .order('position', { ascending: true })
       
       if (error) {
-        console.error('Supabase error in getFolders:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          error: JSON.stringify(error, null, 2)
-        })
+        console.error('Supabase error in getFolders:', JSON.stringify(error, null, 2))
         throw error
       }
       
       console.log('getFolders success, returned:', data?.length, 'folders')
       return data || []
     } catch (err) {
-      console.error('Error in folderService.getFolders:', {
-        error: err,
-        message: err.message,
-        stack: err.stack,
-        stringified: JSON.stringify(err, null, 2)
-      })
+      console.error('Error in folderService.getFolders:', JSON.stringify(err, null, 2))
       throw err
     }
   },
@@ -388,13 +377,7 @@ export const cardService = {
       const { data, error, count } = await query
       
       if (error) {
-        console.error('Supabase error in getCards:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          error: JSON.stringify(error, null, 2)
-        })
+        console.error('Supabase error in getCards:', JSON.stringify(error, null, 2))
         throw error
       }
 
@@ -407,12 +390,7 @@ export const cardService = {
         has_more: ((count || 0) > to + 1)
       }
     } catch (err) {
-      console.error('Error in cardService.getCards:', {
-        error: err,
-        message: err.message,
-        stack: err.stack,
-        stringified: JSON.stringify(err, null, 2)
-      })
+      console.error('Error in cardService.getCards:', JSON.stringify(err, null, 2))
       throw err
     }
   },
@@ -454,7 +432,7 @@ export const cardService = {
         world_id: card.world_id,
         type_id: card.type_id,
         folder_id: card.folder_id,
-        title: card.name,  // Set title to the same value as name for now
+        title: card.title || card.name,  // Use title if provided, otherwise use name
         name: card.name,
         slug,
         summary: card.summary || null,

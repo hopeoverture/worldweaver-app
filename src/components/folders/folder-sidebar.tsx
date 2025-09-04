@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import * as React from 'react'
 import { ChevronRight, ChevronDown, Folder, FolderPlus, MoreVertical, Edit, Trash2, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabaseService } from '@/lib/supabase/service'
@@ -25,14 +26,14 @@ interface FolderTreeNodeProps {
   level: number
 }
 
-function FolderTreeNode({ 
-  folder, 
-  children, 
-  selectedFolderId, 
-  onFolderSelect, 
-  onFolderEdit, 
-  onFolderDelete, 
-  level 
+function FolderTreeNode({
+  folder,
+  children,
+  selectedFolderId,
+  onFolderSelect,
+  onFolderEdit,
+  onFolderDelete,
+  level
 }: FolderTreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true)
   const [showMenu, setShowMenu] = useState(false)
@@ -40,7 +41,7 @@ function FolderTreeNode({
 
   return (
     <div>
-      <div 
+      <div
         className={`flex items-center group hover:bg-slate-700 rounded-md transition-colors ${
           selectedFolderId === folder.id ? 'bg-slate-700 ring-1 ring-slate-600' : ''
         }`}
@@ -141,11 +142,11 @@ function FolderTreeNode({
   )
 }
 
-export default function FolderSidebar({ 
-  worldId, 
-  selectedFolderId, 
-  onFolderSelect, 
-  onFolderChange 
+export default function FolderSidebar({
+  worldId,
+  selectedFolderId,
+  onFolderSelect,
+  onFolderChange
 }: FolderSidebarProps) {
   const [folders, setFolders] = useState<FolderType[]>([])
   const [loading, setLoading] = useState(true)
@@ -158,41 +159,23 @@ export default function FolderSidebar({
       setLoading(true)
       const foldersData = await supabaseService.folder.getFolders(worldId)
       setFolders(foldersData)
-      onFolderChange?.()
     } catch (err) {
       console.error('Error loading folders:', err)
       error('Failed to load folders')
     } finally {
       setLoading(false)
     }
-  }, [worldId, onFolderChange, error])
+  }, [worldId, error])
 
   // Load folders
   useEffect(() => {
     loadFolders()
   }, [loadFolders])
 
-  // Build folder tree
-  const buildFolderTree = useCallback((folders: FolderType[], parentId: string | null = null, level = 0): React.ReactNode => {
-    return folders
-      .filter(folder => folder.parent_id === parentId)
-      .sort((a, b) => a.position - b.position)
-      .map(folder => (
-        <FolderTreeNode
-          key={folder.id}
-          folder={folder}
-          selectedFolderId={selectedFolderId}
-          onFolderSelect={onFolderSelect}
-          onFolderEdit={handleFolderEdit}
-          onFolderDelete={handleFolderDelete}
-          level={level}
-        >
-          {buildFolderTree(folders, folder.id, level + 1)}
-        </FolderTreeNode>
-      ))
-  }, [selectedFolderId, onFolderSelect, handleFolderEdit, handleFolderDelete])
-
-  const folderTree = buildFolderTree(folders)
+  const handleFolderEdit = useCallback((folder: FolderType) => {
+    setEditingFolder(folder)
+    setShowCreateModal(true)
+  }, [])
 
   const handleFolderCreated = (newFolder: FolderType) => {
     setFolders(prev => [...prev, newFolder])
@@ -201,11 +184,6 @@ export default function FolderSidebar({
     success(editingFolder ? 'Folder updated successfully!' : 'Folder created successfully!')
     onFolderChange?.()
   }
-
-  const handleFolderEdit = useCallback((folder: FolderType) => {
-    setEditingFolder(folder)
-    setShowCreateModal(true)
-  }, [])
 
   const handleFolderDelete = useCallback(async (folder: FolderType) => {
     if (!confirm(`Are you sure you want to delete "${folder.name}"? This will move all cards in this folder to "Uncategorized".`)) {
@@ -228,6 +206,28 @@ export default function FolderSidebar({
       console.error('Error deleting folder:', err)
     }
   }, [selectedFolderId, onFolderSelect, success, onFolderChange, error])
+
+  // Build folder tree
+  const buildFolderTree = useCallback((folders: FolderType[], parentId: string | null = null, level = 0): React.ReactNode => {
+    return folders
+      .filter(folder => folder.parent_id === parentId)
+      .sort((a, b) => a.position - b.position)
+      .map(folder => (
+        <FolderTreeNode
+          key={folder.id}
+          folder={folder}
+          selectedFolderId={selectedFolderId}
+          onFolderSelect={onFolderSelect}
+          onFolderEdit={handleFolderEdit}
+          onFolderDelete={handleFolderDelete}
+          level={level}
+        >
+          {buildFolderTree(folders, folder.id, level + 1)}
+        </FolderTreeNode>
+      ))
+  }, [selectedFolderId, onFolderSelect, handleFolderEdit, handleFolderDelete])
+
+  const folderTree = buildFolderTree(folders)
 
   if (loading) {
     return (

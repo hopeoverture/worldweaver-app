@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, Trash2, GripVertical, Sparkles, User, Crown, MapPin, Globe, Zap, Cpu, Users, Calendar, Globe2, Bug } from 'lucide-react'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
@@ -102,13 +102,6 @@ export default function CreateCardTypeModal({
   const { success, error } = useToastHelpers()
   const { handleError } = useErrorHandler()
 
-  // Load templates when modal opens
-  useEffect(() => {
-    if (isOpen && !editingCardType) {
-      loadTemplates()
-    }
-  }, [isOpen, editingCardType, loadTemplates])
-
   const loadTemplates = useCallback(async () => {
     try {
       setLoadingTemplates(true)
@@ -121,6 +114,13 @@ export default function CreateCardTypeModal({
       setLoadingTemplates(false)
     }
   }, [handleError])
+
+  // Load templates when modal opens
+  useEffect(() => {
+    if (isOpen && !editingCardType) {
+      loadTemplates()
+    }
+  }, [isOpen, editingCardType, loadTemplates])
 
   const applyTemplate = (template: CardTypeTemplate) => {
     setSelectedTemplate(template.id)

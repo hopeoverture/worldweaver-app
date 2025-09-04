@@ -62,7 +62,8 @@ export function parseSupabaseError(error: unknown): WorldWeaverError {
 
   // Check for specific Supabase error codes
   if (typeof error === 'object' && error !== null && 'code' in error) {
-    switch ((error as { code: string }).code) {
+    const errCode = (error as { code: string }).code;
+    switch (errCode) {
       case '23505': // Unique violation
         return new ConflictError('A record with this information already exists')
       case '23503': // Foreign key violation
@@ -74,7 +75,8 @@ export function parseSupabaseError(error: unknown): WorldWeaverError {
       case '42501': // Insufficient privilege
         return new AuthorizationError()
       default:
-        return new WorldWeaverError((error as { message: string }).message || 'Database error', (error as { code: string }).code)
+        const errorMessage = (typeof error === 'object' && error !== null && 'message' in error) ? (error as { message: string }).message : 'Database error';
+        return new WorldWeaverError(errorMessage, errCode)
     }
   }
 

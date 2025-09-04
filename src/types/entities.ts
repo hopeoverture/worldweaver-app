@@ -80,6 +80,16 @@ export interface CardType {
   card_count?: number
 }
 
+export interface CardTypeTemplate {
+  id: string
+  name: string
+  description: string
+  icon: string
+  color: string
+  category: string
+  schema: FieldSchema[]
+}
+
 export interface Card {
   id: string
   world_id: string
