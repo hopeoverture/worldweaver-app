@@ -24,6 +24,7 @@ export default function CardsPage() {
   const [cardTypes, setCardTypes] = useState<CardType[]>([])
   const [folders, setFolders] = useState<Folder[]>([])
   const [loading, setLoading] = useState(true)
+  const [cardsLoading, setCardsLoading] = useState(false)
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -58,7 +59,7 @@ export default function CardsPage() {
     if (!user) return;
     
     try {
-      setLoading(true)
+      setCardsLoading(true)
       const params = {
         folder_ids: selectedFolderId ? [selectedFolderId] : undefined,
         query: searchQuery || undefined,
@@ -70,7 +71,7 @@ export default function CardsPage() {
       console.error('Error loading cards:', err)
       error('Failed to load cards')
     } finally {
-      setLoading(false)
+      setCardsLoading(false)
     }
   }, [user, worldId, selectedFolderId, searchQuery])
 
@@ -98,10 +99,17 @@ export default function CardsPage() {
 
   useEffect(() => {
     if (worldId && !authLoading) {
-      loadWorld()
-      loadCards()
-      loadCardTypes()
-      loadFolders()
+      const loadInitialData = async () => {
+        await Promise.all([
+          loadWorld(),
+          loadCards(),
+          loadCardTypes(),
+          loadFolders()
+        ])
+        setLoading(false)
+      }
+      
+      loadInitialData()
     }
   }, [worldId, authLoading, loadWorld, loadCards, loadCardTypes, loadFolders])
 
@@ -270,41 +278,54 @@ export default function CardsPage() {
             <div className="flex items-center justify-center h-64">
               <Loading />
             </div>
-          ) : filteredCards.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="h-8 w-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-medium text-slate-100 mb-2">
-                {selectedFolderId ? 'No cards in this folder' : 'No cards yet'}
-              </h3>
-              <p className="text-slate-400 mb-6">
-                {selectedFolderId 
-                  ? 'This folder is empty. Create your first card or move cards here.'
-                  : 'Get started by creating your first card.'
-                }
-              </p>
-              <Button onClick={() => setShowCreateModal(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Card
-              </Button>
-            </div>
           ) : (
-            <div className={`grid gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                : 'grid-cols-1'
-            }`}>
-              {filteredCards.map((card) => (
-                <CardGridItem
-                  key={card.id}
-                  card={card}
-                  onEdit={handleEditCard}
-                  onDelete={handleDeleteCard}
-                  viewMode={viewMode}
-                />
-              ))}
-            </div>
+            <>
+              {cardsLoading && (
+                <div className="flex items-center justify-center py-4 mb-4">
+                  <div className="flex items-center space-x-2 text-slate-400">
+                    <div className="animate-spin h-4 w-4 border-2 border-slate-600 border-t-indigo-500 rounded-full"></div>
+                    <span className="text-sm">Loading cards...</span>
+                  </div>
+                </div>
+              )}
+              
+              {!cardsLoading && filteredCards.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-slate-700/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Plus className="h-8 w-8 text-slate-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-slate-100 mb-2">
+                    {selectedFolderId ? 'No cards in this folder' : 'No cards yet'}
+                  </h3>
+                  <p className="text-slate-400 mb-6">
+                    {selectedFolderId 
+                      ? 'This folder is empty. Create your first card or move cards here.'
+                      : 'Get started by creating your first card.'
+                    }
+                  </p>
+                  <Button onClick={() => setShowCreateModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create First Card
+                  </Button>
+                </div>
+              ) : (
+                <div className={`grid gap-6 ${
+                  viewMode === 'grid' 
+                    ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                    : 'grid-cols-1'
+                } ${cardsLoading ? 'opacity-50' : ''}`}>
+                  {filteredCards.map((card) => (
+                    <CardGridItem
+                      key={card.id}
+                      card={card}
+                      onEdit={handleEditCard}
+                      onDelete={handleDeleteCard}
+                      viewMode={viewMode}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
