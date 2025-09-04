@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
 // Utility functions to test database operations
 export class DatabaseTest {
@@ -7,7 +6,7 @@ export class DatabaseTest {
 
   async testConnection() {
     try {
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('profiles')
         .select('count')
         .single();

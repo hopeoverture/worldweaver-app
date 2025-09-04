@@ -77,7 +77,7 @@ export function getContrastColor(hexColor: string): string {
   return luminance > 0.5 ? '#000000' : '#FFFFFF'
 }
 
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {

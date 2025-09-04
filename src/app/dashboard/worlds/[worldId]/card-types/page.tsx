@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Search, Settings } from 'lucide-react'
@@ -12,7 +12,6 @@ import CardTypeCard from '@/components/card-types/card-type-card'
 import { Loading } from '@/components/ui/loading'
 import { supabaseService } from '@/lib/supabase/service'
 import { useToastHelpers } from '@/contexts/toast-context'
-import { useAuth } from '@/contexts/auth-context'
 import type { CardType, World } from '@/types/entities'
 
 export default function CardTypesPage() {
@@ -26,21 +25,12 @@ export default function CardTypesPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingCardType, setEditingCardType] = useState<CardType | null>(null)
   
-  const { user } = useAuth()
   const { success, error } = useToastHelpers()
 
-  // Load world and card types
-  useEffect(() => {
-    if (worldId) {
-      loadData()
-    }
-  }, [worldId])
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true)
       
-      // Load world info
       const worldData = await supabaseService.world.getWorld(worldId)
       if (!worldData) {
         error('World not found or you do not have access to it')
@@ -48,18 +38,11 @@ export default function CardTypesPage() {
       }
       setWorld(worldData)
       
-      // Load card types
       const cardTypesData = await supabaseService.cardType.getCardTypes(worldId)
       setCardTypes(cardTypesData)
-    } catch (err: any) {
-      console.error('Error loading data:', {
-        message: err?.message,
-        code: err?.code,
-        details: err?.details,
-        hint: err?.hint,
-        stack: err?.stack
-      })
-      if (err?.message?.includes('not found') || err?.code === 'PGRST116') {
+    } catch (err) {
+      console.error('Error loading data:', err)
+      if (err instanceof Error && err.message.includes('not found')) {
         error('World not found')
       } else {
         error('Failed to load card types')
@@ -67,7 +50,14 @@ export default function CardTypesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [worldId, error])
+
+  // Load world and card types
+  useEffect(() => {
+    if (worldId) {
+      loadData()
+    }
+  }, [worldId, loadData])
 
   const handleCardTypeCreated = (newCardType: CardType) => {
     if (editingCardType) {
@@ -128,7 +118,7 @@ export default function CardTypesPage() {
           World not found
         </h3>
         <p className="text-slate-400">
-          The world you're looking for doesn't exist or you don't have access to it.
+          The world you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
         </p>
       </div>
     )
@@ -150,7 +140,7 @@ export default function CardTypesPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Card Types</h1>
           <p className="text-slate-400">
-            Define the structure and fields for cards in "{world.title}"
+            Define the structure and fields for cards in &quot;{world.title}&quot;
           </p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
@@ -202,7 +192,7 @@ export default function CardTypesPage() {
           <span className="text-sm text-slate-400">
             {filteredCardTypes.length} result{filteredCardTypes.length !== 1 ? 's' : ''} for
           </span>
-          <Badge variant="outline">"{searchQuery}"</Badge>
+          <Badge variant="outline">&quot;{searchQuery}&quot;</Badge>
           {filteredCardTypes.length !== cardTypes.length && (
             <Button
               variant="ghost"

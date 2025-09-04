@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Search, Filter, LayoutGrid, List } from 'lucide-react'
+import { Plus, Search, LayoutGrid, List } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loading } from '@/components/ui/loading'
@@ -33,16 +33,7 @@ export default function CardsPage() {
   const { user, loading: authLoading } = useAuth()
   const { error, success } = useToastHelpers()
 
-  useEffect(() => {
-    if (worldId && !authLoading) {
-      loadWorld()
-      loadCards()
-      loadCardTypes()
-      loadFolders()
-    }
-  }, [worldId, selectedFolderId, authLoading])
-
-  const loadWorld = async () => {
+  const loadWorld = useCallback(async () => {
     try {
       const worldData = await supabaseService.world.getWorld(worldId)
       if (worldData) {
@@ -52,83 +43,58 @@ export default function CardsPage() {
       error('Failed to load world')
       console.error('Error loading world:', err)
     }
-  }
+  }, [worldId, error])
 
-  const loadCards = async () => {
-    if (!user) {
-      console.error('No user authenticated for loadCards')
-      error('Please log in to view cards')
-      return
-    }
-    
-    console.log('loadCards called with user:', user.id, 'worldId:', worldId)
+  const loadCards = useCallback(async () => {
+    if (!user) return;
     
     try {
       setLoading(true)
       const params = {
         folder_ids: selectedFolderId ? [selectedFolderId] : undefined,
         query: searchQuery || undefined,
-        limit: 50 // Load more cards for better UX
+        limit: 50
       }
-      
-      console.log('loadCards calling getCards with params:', params)
       const response = await supabaseService.card.getCards(worldId, params)
-      console.log('loadCards success, received:', response.data?.length, 'cards')
       setCards(response.data)
-    } catch (err: any) {
-      console.error('Error loading cards:', {
-        message: err?.message,
-        code: err?.code,
-        details: err?.details,
-        hint: err?.hint,
-        stack: err?.stack
-      })
+    } catch (err) {
+      console.error('Error loading cards:', err)
       error('Failed to load cards')
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, worldId, selectedFolderId, searchQuery, error])
 
-  const loadCardTypes = async () => {
+  const loadCardTypes = useCallback(async () => {
     try {
       const cardTypesData = await supabaseService.cardType.getCardTypes(worldId)
       setCardTypes(cardTypesData)
-    } catch (err: any) {
-      console.error('Error loading card types:', {
-        message: err?.message,
-        code: err?.code,
-        details: err?.details,
-        hint: err?.hint,
-        stack: err?.stack
-      })
+    } catch (err) {
+      console.error('Error loading card types:', err)
       error('Failed to load card types')
     }
-  }
+  }, [worldId, error])
 
-  const loadFolders = async () => {
-    if (!user) {
-      console.error('No user authenticated for loadFolders')
-      error('Please log in to view folders')
-      return
-    }
-    
-    console.log('loadFolders called with user:', user.id, 'worldId:', worldId)
+  const loadFolders = useCallback(async () => {
+    if (!user) return;
     
     try {
       const foldersData = await supabaseService.folder.getFolders(worldId)
-      console.log('loadFolders success, received:', foldersData?.length, 'folders')
       setFolders(foldersData)
-    } catch (err: any) {
-      console.error('Error loading folders:', {
-        message: err?.message,
-        code: err?.code,
-        details: err?.details,
-        hint: err?.hint,
-        stack: err?.stack
-      })
+    } catch (err) {
+      console.error('Error loading folders:', err)
       error('Failed to load folders')
     }
-  }
+  }, [user, worldId, error])
+
+  useEffect(() => {
+    if (worldId && !authLoading) {
+      loadWorld()
+      loadCards()
+      loadCardTypes()
+      loadFolders()
+    }
+  }, [worldId, authLoading, loadWorld, loadCards, loadCardTypes, loadFolders])
 
   const handleFolderSelect = (folderId: string | null) => {
     setSelectedFolderId(folderId)
@@ -185,12 +151,9 @@ export default function CardsPage() {
 
       return () => clearTimeout(timeoutId)
     }
-  }, [searchQuery, selectedFolderId])
+  }, [searchQuery, selectedFolderId, worldId, loadCards])
 
-  const filteredCards = cards.filter(card => {
-    // Search filter is handled by the API call, so we just return all cards
-    return true
-  })
+  const filteredCards = cards;
 
   if (authLoading || (loading && !world)) {
     return (

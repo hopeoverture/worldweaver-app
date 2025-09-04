@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, Grid, List, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,12 +22,7 @@ export default function WorldsPage() {
   const { success: showSuccess, error: showError } = useToastHelpers()
   const { user } = useAuth()
 
-  // Load worlds
-  useEffect(() => {
-    loadWorlds()
-  }, [])
-
-  const loadWorlds = async () => {
+  const loadWorlds = useCallback(async () => {
     if (!user) return
     
     try {
@@ -40,7 +35,12 @@ export default function WorldsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, showError])
+
+  // Load worlds
+  useEffect(() => {
+    loadWorlds()
+  }, [loadWorlds])
 
   const handleWorldCreated = (newWorld: World) => {
     setWorlds(prev => [newWorld, ...prev])
@@ -153,7 +153,7 @@ export default function WorldsPage() {
           <span className="text-sm text-slate-400">
             {filteredWorlds.length} result{filteredWorlds.length !== 1 ? 's' : ''} for
           </span>
-          <Badge variant="outline">"{searchQuery}"</Badge>
+          <Badge variant="outline">&quot;{searchQuery}&quot;</Badge>
           {filteredWorlds.length !== worlds.length && (
             <Button
               variant="ghost"

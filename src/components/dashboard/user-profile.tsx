@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/auth-context'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -22,13 +22,7 @@ export default function UserProfile() {
   const [message, setMessage] = useState('')
   const supabase = createClient()
 
-  useEffect(() => {
-    if (user) {
-      loadProfile()
-    }
-  }, [user])
-
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user) return
 
     setLoading(true)
@@ -66,12 +60,20 @@ export default function UserProfile() {
         setProfile(createdProfile)
         setFullName(createdProfile.full_name || '')
       }
-    } catch (error: any) {
-      console.error('Error loading profile:', error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error loading profile:', error.message)
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, supabase])
+
+  useEffect(() => {
+    if (user) {
+      loadProfile()
+    }
+  }, [user, loadProfile])
 
   const updateProfile = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -93,8 +95,10 @@ export default function UserProfile() {
 
       setProfile({ ...profile, full_name: fullName })
       setMessage('Profile updated successfully!')
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`)
+    } catch (error) {
+      if (error instanceof Error) {
+        setMessage(`Error: ${error.message}`)
+      }
     } finally {
       setSaving(false)
     }

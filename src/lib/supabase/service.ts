@@ -5,13 +5,10 @@ import type {
   CardType, 
   Card, 
   Folder,
-  CardLink,
-  Comment,
-  AiJob,
+  CardTypeTemplate,
   SearchParams,
   PaginatedResponse 
 } from '@/types/entities'
-import type { Database } from '@/types/database'
 
 const supabase = createClient()
 
@@ -172,7 +169,7 @@ export const cardTypeService = {
     return data || []
   },
 
-  async getCardTypeTemplates(): Promise<any[]> {
+  async getCardTypeTemplates(): Promise<CardTypeTemplate[]> {
     const { data, error } = await supabase
       .from('card_type_templates')
       .select('*')
@@ -298,8 +295,8 @@ export const folderService = {
     } catch (err) {
       console.error('Error in folderService.getFolders:', {
         error: err,
-        message: (err as any)?.message,
-        stack: (err as any)?.stack,
+        message: err.message,
+        stack: err.stack,
         stringified: JSON.stringify(err, null, 2)
       })
       throw err
@@ -412,8 +409,8 @@ export const cardService = {
     } catch (err) {
       console.error('Error in cardService.getCards:', {
         error: err,
-        message: (err as any)?.message,
-        stack: (err as any)?.stack,
+        message: err.message,
+        stack: err.stack,
         stringified: JSON.stringify(err, null, 2)
       })
       throw err
@@ -498,7 +495,7 @@ export const cardService = {
   },
 
   // Card data methods
-  async updateCardData(cardId: string, fieldKey: string, value: any): Promise<void> {
+  async updateCardData(cardId: string, fieldKey: string, value: unknown): Promise<void> {
     const { error } = await supabase
       .from('card_data')
       .upsert({
@@ -521,7 +518,7 @@ export const cardService = {
     if (error) throw error
   },
 
-  async getCardData(cardId: string): Promise<any> {
+  async getCardData(cardId: string): Promise<Record<string, unknown>> {
     const { data, error } = await supabase
       .from('card_data')
       .select('field_key, value')
@@ -530,7 +527,7 @@ export const cardService = {
     if (error) throw error
     
     // Convert array to object
-    const result: any = {}
+    const result: Record<string, unknown> = {}
     data?.forEach(item => {
       result[item.field_key] = item.value?.value
     })

@@ -9,7 +9,7 @@ import type { CardType } from '@/types/entities'
 
 // Map icon names from database to Lucide React components
 const getIconComponent = (iconName: string) => {
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, React.ElementType> = {
     'User': User,
     'Crown': Crown,
     'MapPin': MapPin,

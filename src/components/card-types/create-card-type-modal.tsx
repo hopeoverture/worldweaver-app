@@ -47,7 +47,7 @@ const FIELD_TYPES = [
 
 // Map icon names from database to Lucide React components
 const getIconComponent = (iconName: string) => {
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, React.ElementType> = {
     'User': User,
     'Crown': Crown,
     'MapPin': MapPin,
@@ -107,9 +107,9 @@ export default function CreateCardTypeModal({
     if (isOpen && !editingCardType) {
       loadTemplates()
     }
-  }, [isOpen, editingCardType])
+  }, [isOpen, editingCardType, loadTemplates])
 
-  const loadTemplates = async () => {
+  const loadTemplates = useCallback(async () => {
     try {
       setLoadingTemplates(true)
       const templatesData = await supabaseService.cardType.getCardTypeTemplates()
@@ -120,7 +120,7 @@ export default function CreateCardTypeModal({
     } finally {
       setLoadingTemplates(false)
     }
-  }
+  }, [handleError])
 
   const applyTemplate = (template: CardTypeTemplate) => {
     setSelectedTemplate(template.id)
@@ -286,13 +286,13 @@ export default function CreateCardTypeModal({
                 ) : (
                   <div className="space-y-4">
                     {/* Group templates by category */}
-                    {templates.reduce((groups: any, template) => {
+                    {templates.reduce((groups: Record<string, CardTypeTemplate[]>, template) => {
                       const category = template.category || 'General'
                       if (!groups[category]) groups[category] = []
                       groups[category].push(template)
                       return groups
                     }, {} as Record<string, CardTypeTemplate[]>) && 
-                      Object.entries(templates.reduce((groups: any, template) => {
+                      Object.entries(templates.reduce((groups: Record<string, CardTypeTemplate[]>, template) => {
                         const category = template.category || 'General'
                         if (!groups[category]) groups[category] = []
                         groups[category].push(template)

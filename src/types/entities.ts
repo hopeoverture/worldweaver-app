@@ -85,6 +85,7 @@ export interface Card {
   world_id: string
   type_id: string
   folder_id: string | null
+  title: string
   name: string
   slug: string
   cover_image_url: string | null
@@ -105,7 +106,7 @@ export interface CardData {
   id: string
   card_id: string
   field_key: string
-  value: any // JSON value
+  value: unknown // JSON value
   created_at: string
   updated_at: string
 }
@@ -144,8 +145,8 @@ export interface AiJob {
   user_id: string
   type: 'generate_field' | 'generate_image' | 'batch_generate'
   status: 'pending' | 'running' | 'completed' | 'failed'
-  input_data: any // JSON
-  output_data: any | null // JSON
+  input_data: unknown // JSON
+  output_data: unknown | null // JSON
   error_message: string | null
   tokens_used: number | null
   cost_cents: number | null
@@ -163,7 +164,7 @@ export interface UsageEvent {
   event_type: 'api_call' | 'export' | 'ai_generation'
   tokens_used: number | null
   cost_cents: number | null
-  metadata: any | null // JSON
+  metadata: unknown | null // JSON
   created_at: string
   
   // Joined fields
@@ -177,7 +178,7 @@ export interface FieldSchema {
   kind: FieldKind
   required: boolean
   description?: string
-  default_value?: any
+  default_value?: unknown
   validation?: FieldValidation
   options?: string[] // For select fields
   ref_type?: string // For reference fields
@@ -210,14 +211,14 @@ export interface FieldValidation {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T
   error?: string
   message?: string
   status: number
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   data: T[]
   total: number
   page: number

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, Globe, FileText, Grid3x3, ArrowRight } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
@@ -12,38 +12,51 @@ import { useToastHelpers } from '@/contexts/toast-context'
 import { formatRelativeTime } from '@/lib/utils'
 import type { World } from '@/types/entities'
 
+interface RecentActivity {
+  id: string;
+  type: 'card' | 'world';
+  description: string;
+  timestamp: string;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth()
   const [worlds, setWorlds] = useState<World[]>([])
-  const [recentActivity, setRecentActivity] = useState<any[]>([])
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const { success, error } = useToastHelpers()
 
-  useEffect(() => {
-    if (user) {
-      loadDashboardData()
-    }
-  }, [user])
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
+    if (!user) return;
     try {
       setLoading(true)
       
       // Load user's worlds
-      const userWorlds = await supabaseService.world.getUserWorlds(user!.id)
+      const userWorlds = await supabaseService.world.getUserWorlds(user.id)
       setWorlds(userWorlds)
       
       // TODO: Load recent activity when API is ready
       setRecentActivity([])
       
-    } catch (err: any) {
-      console.error('Error loading dashboard data:', err)
-      error('Failed to load dashboard data')
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error('Error loading dashboard data:', err)
+        error('Failed to load dashboard data: ' + err.message)
+      } else {
+        console.error('An unknown error occurred:', err)
+        error('An unknown error occurred while loading dashboard data')
+      }
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, error])
+
+  useEffect(() => {
+    if (user) {
+      loadDashboardData()
+    }
+  }, [user, loadDashboardData])
 
   const handleWorldCreated = (newWorld: World) => {
     setWorlds(prev => [newWorld, ...prev])

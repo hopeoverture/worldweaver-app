@@ -5,8 +5,9 @@ export async function testDatabaseConnection() {
   try {
     console.log('Testing database connection...')
     
-    // Test basic world query
-    const worlds = await supabaseService.world.getWorlds()
+    // Test basic world query - get user worlds
+    const userId = 'your-user-id-here' // Replace with a valid user ID
+    const worlds = await supabaseService.world.getUserWorlds(userId)
     console.log('Worlds loaded:', worlds)
     
     if (worlds.length > 0) {
@@ -43,7 +44,13 @@ export async function testDatabaseConnection() {
   }
 }
 
+declare global {
+  interface Window {
+    testDatabase: () => void;
+  }
+}
+
 // Call this in the browser console to test
 if (typeof window !== 'undefined') {
-  (window as any).testDatabase = testDatabaseConnection
+  window.testDatabase = testDatabaseConnection
 }

@@ -7,7 +7,7 @@ export class WorldWeaverError extends Error {
     message: string,
     public code?: string,
     public statusCode?: number,
-    public details?: any
+    public details?: unknown
   ) {
     super(message)
     this.name = 'WorldWeaverError'
@@ -57,12 +57,12 @@ export class RateLimitError extends WorldWeaverError {
 }
 
 // Error parsing utilities
-export function parseSupabaseError(error: any): WorldWeaverError {
+export function parseSupabaseError(error: unknown): WorldWeaverError {
   if (!error) return new WorldWeaverError('Unknown error occurred')
 
   // Check for specific Supabase error codes
-  if (error.code) {
-    switch (error.code) {
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    switch ((error as { code: string }).code) {
       case '23505': // Unique violation
         return new ConflictError('A record with this information already exists')
       case '23503': // Foreign key violation
@@ -74,37 +74,42 @@ export function parseSupabaseError(error: any): WorldWeaverError {
       case '42501': // Insufficient privilege
         return new AuthorizationError()
       default:
-        return new WorldWeaverError(error.message || 'Database error', error.code)
+        return new WorldWeaverError((error as { message: string }).message || 'Database error', (error as { code: string }).code)
     }
   }
 
   // Check for auth errors
-  if (error.message?.includes('Invalid login credentials')) {
-    return new AuthenticationError('Invalid email or password')
+  if (typeof error === 'object' && error !== null && 'message' in error) {
+    const message = (error as { message: string }).message;
+    if (message?.includes('Invalid login credentials')) {
+      return new AuthenticationError('Invalid email or password')
+    }
+
+    if (message?.includes('Email not confirmed')) {
+      return new AuthenticationError('Please confirm your email address')
+    }
+
+    if (message?.includes('User not found')) {
+      return new AuthenticationError('User not found')
+    }
+
+    // Check for network errors
+    if (message?.includes('fetch')) {
+      return new WorldWeaverError('Network error. Please check your connection.')
+    }
+
+    // Default
+    return new WorldWeaverError(message || 'An unexpected error occurred')
   }
 
-  if (error.message?.includes('Email not confirmed')) {
-    return new AuthenticationError('Please confirm your email address')
-  }
-
-  if (error.message?.includes('User not found')) {
-    return new AuthenticationError('User not found')
-  }
-
-  // Check for network errors
-  if (error.message?.includes('fetch')) {
-    return new WorldWeaverError('Network error. Please check your connection.')
-  }
-
-  // Default
-  return new WorldWeaverError(error.message || 'An unexpected error occurred')
+  return new WorldWeaverError('An unexpected error occurred')
 }
 
 // Error handling hook
 export function useErrorHandler() {
   const { error, success } = useToastHelpers()
 
-  const handleError = (err: any, context?: string) => {
+  const handleError = (err: unknown, context?: string) => {
     const parsedError = parseSupabaseError(err)
     
     console.error('Error in', context || 'application', ':', parsedError)
@@ -142,14 +147,14 @@ export interface ValidationRule {
   minLength?: number
   maxLength?: number
   pattern?: RegExp
-  custom?: (value: any) => string | null
+  custom?: (value: unknown) => string | null
 }
 
 export interface ValidationSchema {
   [field: string]: ValidationRule
 }
 
-export function validateField(value: any, rules: ValidationRule): string | null {
+export function validateField(value: unknown, rules: ValidationRule): string | null {
   if (rules.required && (!value || (typeof value === 'string' && value.trim() === ''))) {
     return 'This field is required'
   }
@@ -175,7 +180,7 @@ export function validateField(value: any, rules: ValidationRule): string | null 
   return null
 }
 
-export function validateSchema(data: any, schema: ValidationSchema): Record<string, string> {
+export function validateSchema(data: Record<string, unknown>, schema: ValidationSchema): Record<string, string> {
   const errors: Record<string, string> = {}
 
   for (const [field, rules] of Object.entries(schema)) {

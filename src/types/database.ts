@@ -1,425 +1,1292 @@
-// Database types based on the actual schema
-export interface Database {
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          display_name: string | null;
-          avatar_url: string | null;
-          byo_openrouter_key: string | null;
-          byo_openai_key: string | null;
-          plan: string;
-          ai_credits_used: number;
-          storage_bytes_used: number;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          display_name?: string | null;
-          avatar_url?: string | null;
-          byo_openrouter_key?: string | null;
-          byo_openai_key?: string | null;
-          plan?: string;
-          ai_credits_used?: number;
-          storage_bytes_used?: number;
-        };
-        Update: {
-          id?: string;
-          display_name?: string | null;
-          avatar_url?: string | null;
-          byo_openrouter_key?: string | null;
-          byo_openai_key?: string | null;
-          plan?: string;
-          ai_credits_used?: number;
-          storage_bytes_used?: number;
-        };
-      };
-      worlds: {
-        Row: {
-          id: string;
-          owner_id: string;
-          title: string;
-          genre: string | null;
-          summary: string | null;
-          visibility: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          owner_id: string;
-          title: string;
-          genre?: string | null;
-          summary?: string | null;
-          visibility?: string;
-        };
-        Update: {
-          id?: string;
-          owner_id?: string;
-          title?: string;
-          genre?: string | null;
-          summary?: string | null;
-          visibility?: string;
-        };
-      };
-      world_members: {
-        Row: {
-          world_id: string;
-          user_id: string;
-          role: string;
-          created_at: string;
-        };
-        Insert: {
-          world_id: string;
-          user_id: string;
-          role: string;
-        };
-        Update: {
-          world_id?: string;
-          user_id?: string;
-          role?: string;
-        };
-      };
-      folders: {
-        Row: {
-          id: string;
-          world_id: string;
-          parent_id: string | null;
-          name: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          world_id: string;
-          parent_id?: string | null;
-          name: string;
-        };
-        Update: {
-          id?: string;
-          world_id?: string;
-          parent_id?: string | null;
-          name?: string;
-        };
-      };
-      card_types: {
-        Row: {
-          id: string;
-          world_id: string;
-          name: string;
-          icon: string | null;
-          color: string | null;
-          schema: CardFieldSchema[];
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          world_id: string;
-          name: string;
-          icon?: string | null;
-          color?: string | null;
-          schema: CardFieldSchema[];
-        };
-        Update: {
-          id?: string;
-          world_id?: string;
-          name?: string;
-          icon?: string | null;
-          color?: string | null;
-          schema?: CardFieldSchema[];
-        };
-      };
-      cards: {
-        Row: {
-          id: string;
-          world_id: string;
-          folder_id: string | null;
-          type_id: string;
-          title: string;
-          slug: string;
-          fields: Record<string, any>;
-          cover_image_url: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          world_id: string;
-          folder_id?: string | null;
-          type_id: string;
-          title: string;
-          slug: string;
-          fields?: Record<string, any>;
-          cover_image_url?: string | null;
-        };
-        Update: {
-          id?: string;
-          world_id?: string;
-          folder_id?: string | null;
-          type_id?: string;
-          title?: string;
-          slug?: string;
-          fields?: Record<string, any>;
-          cover_image_url?: string | null;
-        };
-      };
-      card_links: {
-        Row: {
-          id: string;
-          world_id: string;
-          from_card: string;
-          to_card: string;
-          label: string;
-          note: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          world_id: string;
-          from_card: string;
-          to_card: string;
-          label: string;
-          note?: string | null;
-        };
-        Update: {
-          id?: string;
-          world_id?: string;
-          from_card?: string;
-          to_card?: string;
-          label?: string;
-          note?: string | null;
-        };
-      };
-      comments: {
-        Row: {
-          id: string;
-          world_id: string;
-          card_id: string | null;
-          author_id: string | null;
-          body: string;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          world_id: string;
-          card_id?: string | null;
-          author_id?: string | null;
-          body: string;
-        };
-        Update: {
-          id?: string;
-          world_id?: string;
-          card_id?: string | null;
-          author_id?: string | null;
-          body?: string;
-        };
-      };
       ai_jobs: {
         Row: {
-          id: string;
-          world_id: string | null;
-          user_id: string | null;
-          kind: string;
-          payload: Record<string, any>;
-          status: string;
-          progress: number;
-          error: string | null;
-          created_at: string;
-          updated_at: string;
-        };
+          created_at: string | null
+          error: string | null
+          id: string
+          kind: string
+          payload: Json
+          progress: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          world_id: string | null
+        }
         Insert: {
-          id?: string;
-          world_id?: string | null;
-          user_id?: string | null;
-          kind: string;
-          payload: Record<string, any>;
-          status?: string;
-          progress?: number;
-          error?: string | null;
-        };
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          kind: string
+          payload?: Json
+          progress?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          world_id?: string | null
+        }
         Update: {
-          id?: string;
-          world_id?: string | null;
-          user_id?: string | null;
-          kind?: string;
-          payload?: Record<string, any>;
-          status?: string;
-          progress?: number;
-          error?: string | null;
-        };
-      };
+          created_at?: string | null
+          error?: string | null
+          id?: string
+          kind?: string
+          payload?: Json
+          progress?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          world_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_jobs_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_data: {
+        Row: {
+          card_id: string
+          created_at: string | null
+          field_key: string
+          id: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          card_id: string
+          created_at?: string | null
+          field_key: string
+          id?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Update: {
+          card_id?: string
+          created_at?: string | null
+          field_key?: string
+          id?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_data_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_links: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          from_card_id: string
+          id: string
+          relationship_type: string
+          to_card_id: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          from_card_id: string
+          id?: string
+          relationship_type: string
+          to_card_id: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          from_card_id?: string
+          id?: string
+          relationship_type?: string
+          to_card_id?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_links_from_card_fkey"
+            columns: ["from_card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_links_to_card_fkey"
+            columns: ["to_card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_links_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      card_type_templates: {
+        Row: {
+          category: string
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          schema: Json
+        }
+        Insert: {
+          category?: string
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          schema?: Json
+        }
+        Update: {
+          category?: string
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          schema?: Json
+        }
+        Relationships: []
+      }
+      card_types: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          schema: Json
+          updated_at: string | null
+          world_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          schema?: Json
+          updated_at?: string | null
+          world_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          schema?: Json
+          updated_at?: string | null
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_types_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cards: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string | null
+          fields: Json | null
+          folder_id: string | null
+          id: string
+          name: string
+          position: number | null
+          slug: string
+          summary: string | null
+          title: string
+          type_id: string
+          updated_at: string | null
+          world_id: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          fields?: Json | null
+          folder_id?: string | null
+          id?: string
+          name: string
+          position?: number | null
+          slug: string
+          summary?: string | null
+          title: string
+          type_id: string
+          updated_at?: string | null
+          world_id: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string | null
+          fields?: Json | null
+          folder_id?: string | null
+          id?: string
+          name?: string
+          position?: number | null
+          slug?: string
+          summary?: string | null
+          title?: string
+          type_id?: string
+          updated_at?: string | null
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cards_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "card_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cards_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          author_id: string | null
+          body: string
+          card_id: string | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          world_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          card_id?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          world_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          card_id?: string | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      folders: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          position: number | null
+          updated_at: string | null
+          world_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          position?: number | null
+          updated_at?: string | null
+          world_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          position?: number | null
+          updated_at?: string | null
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "folders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "folders_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ai_credits_used: number | null
+          avatar_url: string | null
+          byo_openai_key: string | null
+          byo_openrouter_key: string | null
+          created_at: string | null
+          display_name: string | null
+          id: string
+          plan: string | null
+          storage_bytes_used: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          ai_credits_used?: number | null
+          avatar_url?: string | null
+          byo_openai_key?: string | null
+          byo_openrouter_key?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          plan?: string | null
+          storage_bytes_used?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          ai_credits_used?: number | null
+          avatar_url?: string | null
+          byo_openai_key?: string | null
+          byo_openrouter_key?: string | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          plan?: string | null
+          storage_bytes_used?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       usage_events: {
         Row: {
-          id: string;
-          user_id: string;
-          world_id: string | null;
-          event: string;
-          quantity: number;
-          meta: Record<string, any>;
-          created_at: string;
-        };
+          created_at: string | null
+          event: string
+          id: string
+          meta: Json | null
+          quantity: number
+          user_id: string
+          world_id: string | null
+        }
         Insert: {
-          id?: string;
-          user_id: string;
-          world_id?: string | null;
-          event: string;
-          quantity?: number;
-          meta?: Record<string, any>;
-        };
+          created_at?: string | null
+          event: string
+          id?: string
+          meta?: Json | null
+          quantity?: number
+          user_id: string
+          world_id?: string | null
+        }
         Update: {
-          id?: string;
-          user_id?: string;
-          world_id?: string | null;
-          event?: string;
-          quantity?: number;
-          meta?: Record<string, any>;
-        };
-      };
-    };
+          created_at?: string | null
+          event?: string
+          id?: string
+          meta?: Json | null
+          quantity?: number
+          user_id?: string
+          world_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_events_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      world_members: {
+        Row: {
+          created_at: string | null
+          role: string
+          user_id: string
+          world_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          role: string
+          user_id: string
+          world_id: string
+        }
+        Update: {
+          created_at?: string | null
+          role?: string
+          user_id?: string
+          world_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "world_members_world_id_fkey"
+            columns: ["world_id"]
+            isOneToOne: false
+            referencedRelation: "worlds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worlds: {
+        Row: {
+          created_at: string | null
+          genre: string | null
+          id: string
+          owner_id: string
+          summary: string | null
+          title: string
+          updated_at: string | null
+          visibility: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          genre?: string | null
+          id?: string
+          owner_id: string
+          summary?: string | null
+          title: string
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          genre?: string | null
+          id?: string
+          owner_id?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string | null
+          visibility?: string | null
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
+      check_relationship_limit: {
+        Args: { target_card_id: string }
+        Returns: boolean
+      }
+      copy_card_type_template: {
+        Args: {
+          new_name?: string
+          target_world_id: string
+          template_name: string
+        }
+        Returns: string
+      }
+      get_linked_cards: {
+        Args: { target_card_id: string }
+        Returns: {
+          card_type: string
+          direction: string
+          fields: Json
+          id: string
+          relationship_label: string
+          title: string
+        }[]
+      }
+      get_user_limits: {
+        Args: { target_user_id: string }
+        Returns: {
+          ai_credits_limit: number
+          cards_limit: number
+          current_ai_credits: number
+          current_cards: number
+          current_storage_bytes: number
+          current_worlds: number
+          plan: string
+          seats_limit: number
+          storage_gb_limit: number
+          worlds_limit: number
+        }[]
+      }
+      get_world_summary: {
+        Args: { target_world_id: string }
+        Returns: {
+          card_count: number
+          recent_cards: Json
+          world_genre: string
+          world_summary: string
+          world_title: string
+        }[]
+      }
       search_cards: {
         Args: {
-          search_term: string;
-          target_world_id: string;
-          card_type_filter?: string;
-          folder_filter?: string;
-          limit_count?: number;
-        };
+          card_type_filter?: string
+          folder_filter?: string
+          limit_count?: number
+          search_term: string
+          target_world_id: string
+        }
         Returns: {
-          id: string;
-          world_id: string;
-          folder_id: string | null;
-          type_id: string;
-          title: string;
-          slug: string;
-          fields: Record<string, any>;
-          cover_image_url: string | null;
-          created_at: string;
-          updated_at: string;
-          rank: number;
-        }[];
-      };
-      get_world_summary: {
-        Args: {
-          target_world_id: string;
-        };
+          cover_image_url: string
+          created_at: string
+          fields: Json
+          folder_id: string
+          id: string
+          rank: number
+          slug: string
+          title: string
+          type_id: string
+          updated_at: string
+          world_id: string
+        }[]
+      }
+      setup_world_defaults: {
+        Args: { p_user_id: string; p_world_id: string }
+        Returns: undefined
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  storage: {
+    Tables: {
+      buckets: {
+        Row: {
+          allowed_mime_types: string[] | null
+          avif_autodetection: boolean | null
+          created_at: string | null
+          file_size_limit: number | null
+          id: string
+          name: string
+          owner: string | null
+          owner_id: string | null
+          public: boolean | null
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_mime_types?: string[] | null
+          avif_autodetection?: boolean | null
+          created_at?: string | null
+          file_size_limit?: number | null
+          id: string
+          name: string
+          owner?: string | null
+          owner_id?: string | null
+          public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_mime_types?: string[] | null
+          avif_autodetection?: boolean | null
+          created_at?: string | null
+          file_size_limit?: number | null
+          id?: string
+          name?: string
+          owner?: string | null
+          owner_id?: string | null
+          public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      buckets_analytics: {
+        Row: {
+          created_at: string
+          format: string
+          id: string
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string
+          id: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          format?: string
+          id?: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      iceberg_namespaces: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iceberg_namespaces_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets_analytics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iceberg_tables: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          location: string
+          name: string
+          namespace_id: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          namespace_id: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          namespace_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iceberg_tables_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iceberg_tables_namespace_id_fkey"
+            columns: ["namespace_id"]
+            isOneToOne: false
+            referencedRelation: "iceberg_namespaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      migrations: {
+        Row: {
+          executed_at: string | null
+          hash: string
+          id: number
+          name: string
+        }
+        Insert: {
+          executed_at?: string | null
+          hash: string
+          id: number
+          name: string
+        }
+        Update: {
+          executed_at?: string | null
+          hash?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      objects: {
+        Row: {
+          bucket_id: string | null
+          created_at: string | null
+          id: string
+          last_accessed_at: string | null
+          level: number | null
+          metadata: Json | null
+          name: string | null
+          owner: string | null
+          owner_id: string | null
+          path_tokens: string[] | null
+          updated_at: string | null
+          user_metadata: Json | null
+          version: string | null
+        }
+        Insert: {
+          bucket_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          level?: number | null
+          metadata?: Json | null
+          name?: string | null
+          owner?: string | null
+          owner_id?: string | null
+          path_tokens?: string[] | null
+          updated_at?: string | null
+          user_metadata?: Json | null
+          version?: string | null
+        }
+        Update: {
+          bucket_id?: string | null
+          created_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          level?: number | null
+          metadata?: Json | null
+          name?: string | null
+          owner?: string | null
+          owner_id?: string | null
+          path_tokens?: string[] | null
+          updated_at?: string | null
+          user_metadata?: Json | null
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "objects_bucketId_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prefixes: {
+        Row: {
+          bucket_id: string
+          created_at: string | null
+          level: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string | null
+          level?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string | null
+          level?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prefixes_bucketId_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      s3_multipart_uploads: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          in_progress_size: number
+          key: string
+          owner_id: string | null
+          upload_signature: string
+          user_metadata: Json | null
+          version: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id: string
+          in_progress_size?: number
+          key: string
+          owner_id?: string | null
+          upload_signature: string
+          user_metadata?: Json | null
+          version: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          in_progress_size?: number
+          key?: string
+          owner_id?: string | null
+          upload_signature?: string
+          user_metadata?: Json | null
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      s3_multipart_uploads_parts: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          etag: string
+          id: string
+          key: string
+          owner_id: string | null
+          part_number: number
+          size: number
+          upload_id: string
+          version: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          etag: string
+          id?: string
+          key: string
+          owner_id?: string | null
+          part_number: number
+          size?: number
+          upload_id: string
+          version: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          etag?: string
+          id?: string
+          key?: string
+          owner_id?: string | null
+          part_number?: number
+          size?: number
+          upload_id?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "s3_multipart_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      add_prefixes: {
+        Args: { _bucket_id: string; _name: string }
+        Returns: undefined
+      }
+      can_insert_object: {
+        Args: { bucketid: string; metadata: Json; name: string; owner: string }
+        Returns: undefined
+      }
+      delete_prefix: {
+        Args: { _bucket_id: string; _name: string }
+        Returns: boolean
+      }
+      extension: {
+        Args: { name: string }
+        Returns: string
+      }
+      filename: {
+        Args: { name: string }
+        Returns: string
+      }
+      foldername: {
+        Args: { name: string }
+        Returns: string[]
+      }
+      get_level: {
+        Args: { name: string }
+        Returns: number
+      }
+      get_prefix: {
+        Args: { name: string }
+        Returns: string
+      }
+      get_prefixes: {
+        Args: { name: string }
+        Returns: string[]
+      }
+      get_size_by_bucket: {
+        Args: Record<PropertyKey, never>
         Returns: {
-          world_title: string;
-          world_genre: string | null;
-          world_summary: string | null;
-          card_count: number;
-          recent_cards: Record<string, any>;
-        }[];
-      };
-      get_linked_cards: {
+          bucket_id: string
+          size: number
+        }[]
+      }
+      list_multipart_uploads_with_delimiter: {
         Args: {
-          target_card_id: string;
-        };
+          bucket_id: string
+          delimiter_param: string
+          max_keys?: number
+          next_key_token?: string
+          next_upload_token?: string
+          prefix_param: string
+        }
         Returns: {
-          id: string;
-          title: string;
-          card_type: string;
-          relationship_label: string;
-          direction: string;
-          fields: Record<string, any>;
-        }[];
-      };
-      check_relationship_limit: {
+          created_at: string
+          id: string
+          key: string
+        }[]
+      }
+      list_objects_with_delimiter: {
         Args: {
-          target_card_id: string;
-        };
-        Returns: boolean;
-      };
-      get_user_limits: {
-        Args: {
-          target_user_id: string;
-        };
+          bucket_id: string
+          delimiter_param: string
+          max_keys?: number
+          next_token?: string
+          prefix_param: string
+          start_after?: string
+        }
         Returns: {
-          plan: string;
-          worlds_limit: number;
-          cards_limit: number;
-          seats_limit: number;
-          ai_credits_limit: number;
-          storage_gb_limit: number;
-          current_worlds: number;
-          current_cards: number;
-          current_ai_credits: number;
-          current_storage_bytes: number;
-        }[];
-      };
-    };
-  };
+          id: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      operation: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      search: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_legacy_v1: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_v1_optimised: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_v2: {
+        Args: {
+          bucket_name: string
+          levels?: number
+          limits?: number
+          prefix: string
+          start_after?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          key: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+    }
+    Enums: {
+      buckettype: "STANDARD" | "ANALYTICS"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-// Application types
-export type Profile = Database['public']['Tables']['profiles']['Row'];
-export type World = Database['public']['Tables']['worlds']['Row'];
-export type CardType = Database['public']['Tables']['card_types']['Row'];
-export type Folder = Database['public']['Tables']['folders']['Row'];
-export type Card = Database['public']['Tables']['cards']['Row'];
-export type CardLink = Database['public']['Tables']['card_links']['Row'];
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-// Field types for card schemas
-export type FieldKind = 
-  | 'short_text'
-  | 'long_text'
-  | 'rich_text'
-  | 'number'
-  | 'boolean'
-  | 'date'
-  | 'select'
-  | 'multi_select'
-  | 'reference'
-  | 'image'
-  | 'url';
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
-export interface CardFieldSchema {
-  key: string;
-  label: string;
-  kind: FieldKind;
-  description?: string;
-  required?: boolean;
-  default?: any;
-  options?: string[]; // for select/multi_select
-  validation?: {
-    regex?: string;
-    min?: number;
-    max?: number;
-  };
-  ref_type?: string; // for reference fields
-  ai_prompt?: string;
-  visibility?: 'basic' | 'advanced';
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
-// Plan types
-export type PlanName = 'free' | 'starter' | 'creator' | 'pro' | 'studio';
-
-export interface PlanLimits {
-  worlds: number;
-  cards: number;
-  seats: number;
-  ai_credits: number;
-  storage_gb: number;
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
-// AI types
-export type AIJobKind = 'field_text' | 'image_token' | 'batch' | 'export_zip';
-export type AIJobStatus = 'queued' | 'running' | 'succeeded' | 'failed';
-
-export interface AIJob {
-  id: string;
-  world_id: string;
-  user_id: string;
-  kind: AIJobKind;
-  payload: Record<string, any>;
-  status: AIJobStatus;
-  progress: number;
-  error?: string;
-  created_at: string;
-  updated_at: string;
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
 }
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {},
+  },
+  storage: {
+    Enums: {
+      buckettype: ["STANDARD", "ANALYTICS"],
+    },
+  },
+} as const
+

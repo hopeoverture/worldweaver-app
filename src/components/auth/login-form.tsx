@@ -23,7 +23,7 @@ export default function LoginForm() {
     setError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
@@ -33,8 +33,10 @@ export default function LoginForm() {
       // Redirect to original page or dashboard
       router.push(redirectedFrom || '/dashboard')
       router.refresh()
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      }
     } finally {
       setLoading(false)
     }
@@ -57,8 +59,10 @@ export default function LoginForm() {
       if (error) throw error
 
       setError('Check your email for the password reset link')
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message)
+      }
     } finally {
       setLoading(false)
     }

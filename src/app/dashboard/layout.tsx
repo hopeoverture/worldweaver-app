@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, usePathname } from 'next/navigation'
 import { AuthProvider } from '@/contexts/auth-context'
 import { ToastProvider } from '@/contexts/toast-context'
@@ -22,16 +22,8 @@ export default function DashboardLayout({
   // Extract world ID from URL if we're in a world context
   const worldId = params?.worldId as string
 
-  // Load current world when in world context
-  useEffect(() => {
-    if (worldId && pathname.includes('/worlds/')) {
-      loadCurrentWorld()
-    } else {
-      setCurrentWorld(null)
-    }
-  }, [worldId, pathname])
-
-  const loadCurrentWorld = async () => {
+  const loadCurrentWorld = useCallback(async () => {
+    if (!worldId) return;
     try {
       const world = await supabaseService.world.getWorld(worldId)
       setCurrentWorld(world)
@@ -39,7 +31,16 @@ export default function DashboardLayout({
       console.error('Error loading current world:', err)
       setCurrentWorld(null)
     }
-  }
+  }, [worldId])
+
+  // Load current world when in world context
+  useEffect(() => {
+    if (worldId && pathname.includes('/worlds/')) {
+      loadCurrentWorld()
+    } else {
+      setCurrentWorld(null)
+    }
+  }, [worldId, pathname, loadCurrentWorld])
 
   const handleMobileToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen)

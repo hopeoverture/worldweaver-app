@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Settings, FileText, Folders, Grid } from 'lucide-react'
+import { ArrowLeft, Settings, FileText, Grid } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loading } from '@/components/ui/loading'
@@ -22,13 +22,7 @@ export default function WorldDetailPage() {
   
   const { error } = useToastHelpers()
 
-  useEffect(() => {
-    if (worldId) {
-      loadWorld()
-    }
-  }, [worldId, retryCount])
-
-  const loadWorld = async () => {
+  const loadWorld = useCallback(async () => {
     try {
       setLoading(true)
       const worldData = await supabaseService.world.getWorld(worldId)
@@ -38,9 +32,9 @@ export default function WorldDetailPage() {
         setWorld(null)
         error('World not found or you do not have access to it')
       }
-    } catch (err: any) {
+    } catch (err) {
       setWorld(null)
-      if (err?.message?.includes('not found') || err?.code === 'PGRST116') {
+      if (err instanceof Error && err.message.includes('not found')) {
         error('World not found')
       } else {
         error('Failed to load world')
@@ -49,7 +43,13 @@ export default function WorldDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [worldId, error])
+
+  useEffect(() => {
+    if (worldId) {
+      loadWorld()
+    }
+  }, [worldId, retryCount, loadWorld])
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1)
@@ -70,7 +70,7 @@ export default function WorldDetailPage() {
           World not found
         </h3>
         <p className="text-slate-400 mb-4">
-          The world you're looking for doesn't exist or you don't have access to it.
+          The world you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
         </p>
         <div className="space-x-4">
           <Link href="/dashboard/worlds">

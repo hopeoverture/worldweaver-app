@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreVertical, Edit, Trash2, ExternalLink, Image as ImageIcon } from 'lucide-react'
+import { MoreVertical, Edit, Trash2, Image as ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatRelativeTime } from '@/lib/utils'
 import type { Card } from '@/types/entities'

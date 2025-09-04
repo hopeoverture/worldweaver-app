@@ -1,9 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { Modal, ModalContent } from './modal'
-import { X } from 'lucide-react'
-import { Button } from './button'
 import { cn } from '@/lib/utils'
 
 interface DialogProps {
@@ -14,8 +11,8 @@ interface DialogProps {
 
 interface DialogContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
-  onPointerDownOutside?: (event: any) => void
-  onEscapeKeyDown?: (event: any) => void
+  onPointerDownOutside?: (event: React.PointerEvent) => void
+  onEscapeKeyDown?: (event: React.KeyboardEvent) => void
 }
 
 interface DialogHeaderProps extends React.HTMLAttributes<HTMLDivElement> {

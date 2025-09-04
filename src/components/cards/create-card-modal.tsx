@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { supabaseService } from '@/lib/supabase/service'
 import { useToastHelpers } from '@/contexts/toast-context'
-import { FileText, Image, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import type { Card, CardType, Folder } from '@/types/entities'
 
 interface CreateCardModalProps {
@@ -34,7 +34,6 @@ export default function CreateCardModal({
   const [summary, setSummary] = useState('')
   const [typeId, setTypeId] = useState('')
   const [folderId, setFolderId] = useState<string | null>(selectedFolderId || null)
-  const [coverImage, setCoverImage] = useState<File | null>(null)
   const [coverImageUrl, setCoverImageUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const { success, error } = useToastHelpers()
@@ -46,7 +45,6 @@ export default function CreateCardModal({
       setSummary('')
       setTypeId(cardTypes[0]?.id || '')
       setFolderId(selectedFolderId || null)
-      setCoverImage(null)
       setCoverImageUrl('')
     }
   }, [isOpen, selectedFolderId, cardTypes])
@@ -73,6 +71,7 @@ export default function CreateCardModal({
         world_id: worldId,
         type_id: typeId,
         folder_id: folderId,
+        title: name.trim(),
         name: name.trim(),
         summary: summary.trim() || null,
         cover_image_url: coverImageUrl || null,
@@ -90,7 +89,7 @@ export default function CreateCardModal({
       if (err instanceof Error) {
         errorMessage = `Failed to create card: ${err.message}`
       } else if (typeof err === 'object' && err !== null && 'message' in err) {
-        errorMessage = `Failed to create card: ${(err as any).message}`
+        errorMessage = `Failed to create card: ${err.message}`
       } else if (typeof err === 'string') {
         errorMessage = `Failed to create card: ${err}`
       }

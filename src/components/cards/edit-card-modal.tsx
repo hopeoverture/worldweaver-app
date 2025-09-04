@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { supabaseService } from '@/lib/supabase/service'
 import { useToastHelpers } from '@/contexts/toast-context'
-import { Edit } from 'lucide-react'
 import type { Card, CardType, Folder } from '@/types/entities'
 
 interface EditCardModalProps {
