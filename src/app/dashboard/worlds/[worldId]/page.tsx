@@ -132,7 +132,7 @@ export default function WorldDetailPage() {
       </div>
 
       {/* Navigation Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Card Types */}
         <Link href={`/dashboard/worlds/${worldId}/card-types`}>
           <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 hover:bg-slate-700 transition-colors cursor-pointer group">
@@ -153,41 +153,25 @@ export default function WorldDetailPage() {
           </div>
         </Link>
 
-        {/* Cards (Coming Soon) */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 opacity-60">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-slate-600/20 rounded-lg flex items-center justify-center">
-              <FileText className="h-5 w-5 text-slate-500" />
+        {/* Cards & Folders */}
+        <Link href={`/dashboard/worlds/${worldId}/cards`}>
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 hover:bg-slate-700 transition-colors cursor-pointer group">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5 text-green-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-100 group-hover:text-green-400">
+                Cards
+              </h3>
             </div>
-            <h3 className="text-lg font-semibold text-slate-400">
-              Cards
-            </h3>
-          </div>
-          <p className="text-slate-400 text-sm mb-4">
-            Create and manage individual cards for your worldbuilding content.
-          </p>
-          <div className="text-sm text-slate-500">
-            Coming in Phase 2.4
-          </div>
-        </div>
-
-        {/* Folders (Coming Soon) */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 opacity-60">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-slate-600/20 rounded-lg flex items-center justify-center">
-              <Folders className="h-5 w-5 text-slate-500" />
+            <p className="text-slate-300 text-sm mb-4">
+              Create and manage individual cards for your worldbuilding content.
+            </p>
+            <div className="text-sm text-slate-400">
+              Characters, locations, items, and more organized in folders
             </div>
-            <h3 className="text-lg font-semibold text-slate-400">
-              Folders
-            </h3>
           </div>
-          <p className="text-slate-400 text-sm mb-4">
-            Organize your cards into folders and hierarchies for better structure.
-          </p>
-          <div className="text-sm text-slate-500">
-            Coming in Phase 2.3
-          </div>
-        </div>
+        </Link>
       </div>
 
       {/* Quick Stats */}

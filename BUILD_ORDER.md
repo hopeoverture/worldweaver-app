@@ -43,17 +43,17 @@
 - [x] Field validation and default values
 
 ### 2.3 Folders & Organization (Week 5)
-- [ ] Folder creation, nesting, and management
-- [ ] Folder sidebar navigation
-- [ ] Card assignment to folders
-- [ ] Folder-based filtering
+- [x] Folder creation, nesting, and management
+- [x] Folder sidebar navigation
+- [x] Card assignment to folders
+- [x] Folder-based filtering
 
 ### 2.4 Cards Management (Week 5-6)
-- [ ] Card creation with dynamic field rendering
-- [ ] Card editing with field validation
-- [ ] Card deletion and bulk operations
-- [ ] Image upload and preview
-- [ ] Auto-slug generation
+- [x] Card creation with dynamic field rendering
+- [x] Card editing with field validation
+- [x] Card deletion and bulk operations
+- [x] Image upload and preview
+- [x] Auto-slug generation
 
 ## Phase 3: Core Features (Weeks 7-9)
 

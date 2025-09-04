@@ -114,6 +114,23 @@ export const worldService = {
       .single()
     
     if (error) throw error
+    
+    // Set up default folders, card types, and starter cards for the new world
+    try {
+      const { error: setupError } = await supabase.rpc('setup_world_defaults', {
+        p_world_id: data.id,
+        p_user_id: world.owner_id
+      })
+      
+      if (setupError) {
+        console.error('Error setting up world defaults:', setupError)
+        // Don't throw here - the world was created successfully, 
+        // just the defaults failed to set up
+      }
+    } catch (setupErr) {
+      console.error('Error calling setup_world_defaults:', setupErr)
+    }
+    
     return data
   },
 
@@ -256,17 +273,37 @@ export const cardTypeService = {
 // Folder utilities
 export const folderService = {
   async getFolders(worldId: string): Promise<Folder[]> {
-    const { data, error } = await supabase
-      .from('folders')
-      .select(`
-        *,
-        cards(count)
-      `)
-      .eq('world_id', worldId)
-      .order('position')
-    
-    if (error) throw error
-    return data || []
+    try {
+      console.log('getFolders called with worldId:', worldId)
+      
+      const { data, error } = await supabase
+        .from('folders')
+        .select('*')
+        .eq('world_id', worldId)
+        .order('position', { ascending: true })
+      
+      if (error) {
+        console.error('Supabase error in getFolders:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          error: JSON.stringify(error, null, 2)
+        })
+        throw error
+      }
+      
+      console.log('getFolders success, returned:', data?.length, 'folders')
+      return data || []
+    } catch (err) {
+      console.error('Error in folderService.getFolders:', {
+        error: err,
+        message: (err as any)?.message,
+        stack: (err as any)?.stack,
+        stringified: JSON.stringify(err, null, 2)
+      })
+      throw err
+    }
   },
 
   async createFolder(folder: Omit<Folder, 'id' | 'created_at' | 'updated_at'>): Promise<Folder> {
@@ -312,51 +349,74 @@ export const folderService = {
 // Card utilities
 export const cardService = {
   async getCards(worldId: string, params?: SearchParams): Promise<PaginatedResponse<Card>> {
-    let query = supabase
-      .from('cards')
-      .select(`
-        *,
-        type:card_types(id, name, icon, color),
-        folder:folders(id, name, color)
-      `, { count: 'exact' })
-      .eq('world_id', worldId)
+    try {
+      console.log('getCards called with worldId:', worldId, 'params:', params)
+      
+      let query = supabase
+        .from('cards')
+        .select(`
+          *,
+          type:card_types(id, name, icon, color),
+          folder:folders(id, name, color),
+          data:card_data(id, field_key, value)
+        `, { count: 'exact' })
+        .eq('world_id', worldId)
 
-    // Apply filters
-    if (params?.type_ids?.length) {
-      query = query.in('type_id', params.type_ids)
-    }
-    
-    if (params?.folder_ids?.length) {
-      query = query.in('folder_id', params.folder_ids)
-    }
+      // Apply filters
+      if (params?.type_ids?.length) {
+        query = query.in('type_id', params.type_ids)
+      }
+      
+      if (params?.folder_ids?.length) {
+        query = query.in('folder_id', params.folder_ids)
+      }
 
-    if (params?.query) {
-      query = query.textSearch('name', params.query)
-    }
+      if (params?.query) {
+        query = query.textSearch('name', params.query)
+      }
 
-    // Apply sorting
-    const sortBy = params?.sort_by || 'updated_at'
-    const sortOrder = params?.sort_order || 'desc'
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
+      // Apply sorting
+      const sortBy = params?.sort_by || 'updated_at'
+      const sortOrder = params?.sort_order || 'desc'
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' })
 
-    // Apply pagination
-    const page = params?.page || 1
-    const limit = params?.limit || 20
-    const from = (page - 1) * limit
-    const to = from + limit - 1
-    
-    query = query.range(from, to)
+      // Apply pagination
+      const page = params?.page || 1
+      const limit = params?.limit || 20
+      const from = (page - 1) * limit
+      const to = from + limit - 1
+      
+      query = query.range(from, to)
 
-    const { data, error, count } = await query
-    
-    if (error) throw error
+      const { data, error, count } = await query
+      
+      if (error) {
+        console.error('Supabase error in getCards:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          error: JSON.stringify(error, null, 2)
+        })
+        throw error
+      }
 
-    return {
-      data: data || [],
-      total: count || 0,
-      page,
-      limit,
-      has_more: ((count || 0) > to + 1)
+      console.log('getCards success, returned:', data?.length, 'cards')
+      return {
+        data: data || [],
+        total: count || 0,
+        page,
+        limit,
+        has_more: ((count || 0) > to + 1)
+      }
+    } catch (err) {
+      console.error('Error in cardService.getCards:', {
+        error: err,
+        message: (err as any)?.message,
+        stack: (err as any)?.stack,
+        stringified: JSON.stringify(err, null, 2)
+      })
+      throw err
     }
   },
 
@@ -367,7 +427,7 @@ export const cardService = {
         *,
         type:card_types(id, name, icon, color, schema),
         folder:folders(id, name, color),
-        card_data(*),
+        data:card_data(id, field_key, value),
         card_links_from:card_links!from_card_id(
           *,
           to_card:cards(id, name, type:card_types(name, icon, color))
@@ -394,8 +454,15 @@ export const cardService = {
     const { data, error } = await supabase
       .from('cards')
       .insert({
-        ...card,
+        world_id: card.world_id,
+        type_id: card.type_id,
+        folder_id: card.folder_id,
+        title: card.name,  // Set title to the same value as name for now
+        name: card.name,
         slug,
+        summary: card.summary || null,
+        cover_image_url: card.cover_image_url || null,
+        position: card.position || 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -428,6 +495,46 @@ export const cardService = {
       .eq('id', cardId)
     
     if (error) throw error
+  },
+
+  // Card data methods
+  async updateCardData(cardId: string, fieldKey: string, value: any): Promise<void> {
+    const { error } = await supabase
+      .from('card_data')
+      .upsert({
+        card_id: cardId,
+        field_key: fieldKey,
+        value: { value },
+        updated_at: new Date().toISOString()
+      })
+    
+    if (error) throw error
+  },
+
+  async deleteCardData(cardId: string, fieldKey: string): Promise<void> {
+    const { error } = await supabase
+      .from('card_data')
+      .delete()
+      .eq('card_id', cardId)
+      .eq('field_key', fieldKey)
+    
+    if (error) throw error
+  },
+
+  async getCardData(cardId: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('card_data')
+      .select('field_key, value')
+      .eq('card_id', cardId)
+    
+    if (error) throw error
+    
+    // Convert array to object
+    const result: any = {}
+    data?.forEach(item => {
+      result[item.field_key] = item.value?.value
+    })
+    return result
   }
 }
 
