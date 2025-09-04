@@ -1,10 +1,39 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreVertical, Edit, Trash2, Image as ImageIcon } from 'lucide-react'
+import { MoreVertical, Edit, Trash2, Image as ImageIcon, User, Crown, MapPin, Globe, Globe2, Zap, Cpu, Users, Calendar, Bug, Sparkles, Target, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatRelativeTime } from '@/lib/utils'
 import type { Card } from '@/types/entities'
+
+// Map icon names from database to Lucide React components  
+const getIconComponent = (iconName: string, size: 'small' | 'large' = 'small') => {
+  const iconMap: Record<string, React.ElementType> = {
+    'User': User,
+    'Crown': Crown,
+    'MapPin': MapPin,
+    'Globe': Globe,
+    'Globe2': Globe2,
+    'Zap': Zap,
+    'Cpu': Cpu,
+    'Users': Users,
+    'Calendar': Calendar,
+    'Bug': Bug,
+    'Sparkles': Sparkles,
+    'Target': Target,
+    'Package': Package,
+  }
+  
+  const IconComponent = iconMap[iconName]
+  if (IconComponent) {
+    const className = size === 'large' ? 'h-12 w-12 text-slate-300' : 'h-6 w-6 text-slate-300'
+    return <IconComponent className={className} />
+  }
+  
+  // Fallback: if it's an emoji or unknown icon, display as text
+  const textSize = size === 'large' ? 'text-4xl' : 'text-lg'
+  return <span className={textSize}>{iconName}</span>
+}
 
 interface CardGridItemProps {
   card: Card
@@ -61,7 +90,7 @@ export default function CardGridItem({
             ) : null}
             <div className={`flex items-center justify-center ${card.cover_image_url ? 'hidden' : ''}`}>
               {card.type?.icon ? (
-                <span className="text-lg">{card.type.icon}</span>
+                getIconComponent(card.type.icon, 'small')
               ) : (
                 <ImageIcon className="h-6 w-6 text-slate-400" />
               )}
@@ -161,7 +190,7 @@ export default function CardGridItem({
           ) : null}
           <div className={`absolute inset-0 flex items-center justify-center ${card.cover_image_url ? 'hidden' : ''}`}>
             {card.type?.icon ? (
-              <span className="text-4xl">{card.type.icon}</span>
+              getIconComponent(card.type.icon, 'large')
             ) : (
               <ImageIcon className="h-12 w-12 text-slate-400" />
             )}
