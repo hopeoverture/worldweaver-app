@@ -1,0 +1,128 @@
+@import "tailwindcss";
+
+:root {
+  /* Dark mode color scheme for WorldWeaver - Pure black backgrounds */
+  --background: #000000;
+  --foreground: #ffffff;
+  
+  /* Surface colors */
+  --surface: #1a1a1a;
+  --surface-hover: #2a2a2a;
+  --surface-active: #3a3a3a;
+  
+  /* Border colors */
+  --border: #404040;
+  --border-light: #505050;
+  
+  /* Text colors */
+  --text-primary: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-muted: #a0a0a0;
+  --text-disabled: #606060;
+  
+  /* Accent colors */
+  --primary: #6366f1;
+  --primary-hover: #5855eb;
+  --primary-foreground: #ffffff;
+  
+  --secondary: #4f46e5;
+  --secondary-hover: #4338ca;
+  --secondary-foreground: #ffffff;
+  
+  /* Status colors */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #ffffff;
+  --error: #ef4444;
+  --error-foreground: #ffffff;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+  
+  /* Input colors */
+  --input-background: #1e293b;
+  --input-border: #475569;
+  --input-focus: #6366f1;
+  
+  /* Card colors */
+  --card-background: #1e293b;
+  --card-border: #334155;
+  --card-hover: #334155;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  line-height: 1.6;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Improved readability */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+
+p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling for dark mode */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Selection styling */
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Improved button and input focus rings */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Loading animation */
+@keyframes pulse-dark {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.animate-pulse-dark {
+  animation: pulse-dark 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
