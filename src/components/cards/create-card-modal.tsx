@@ -8,8 +8,37 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { supabaseService } from '@/lib/supabase/service'
 import { useToastHelpers } from '@/contexts/toast-context'
-import { Upload } from 'lucide-react'
+import { Plus, Settings, User, Crown, MapPin, Globe, Globe2, Zap, Cpu, Users, Calendar, Bug, Sparkles, Target, Package } from 'lucide-react'
 import type { Card, CardType, Folder } from '@/types/entities'
+
+// Map icon names from database to Lucide React components
+const getIconComponent = (iconName: string, size: 'small' | 'large' = 'small') => {
+  const iconMap: Record<string, React.ElementType> = {
+    'User': User,
+    'Crown': Crown,
+    'MapPin': MapPin,
+    'Globe': Globe,
+    'Globe2': Globe2,
+    'Zap': Zap,
+    'Cpu': Cpu,
+    'Users': Users,
+    'Calendar': Calendar,
+    'Bug': Bug,
+    'Sparkles': Sparkles,
+    'Target': Target,
+    'Package': Package,
+  }
+  
+  const IconComponent = iconMap[iconName]
+  if (IconComponent) {
+    const className = size === 'large' ? 'h-6 w-6' : 'h-4 w-4'
+    return <IconComponent className={className} />
+  }
+  
+  // Fallback: if it's an emoji or unknown icon, display as text
+  const textSize = size === 'large' ? 'text-lg' : 'text-sm'
+  return <span className={textSize}>{iconName}</span>
+}
 
 interface CreateCardModalProps {
   isOpen: boolean
@@ -19,6 +48,7 @@ interface CreateCardModalProps {
   selectedFolderId?: string | null
   cardTypes: CardType[]
   folders: Folder[]
+  onCreateCardType?: () => void // Add this prop to allow creating new card types
 }
 
 export default function CreateCardModal({
@@ -28,8 +58,11 @@ export default function CreateCardModal({
   worldId,
   selectedFolderId,
   cardTypes,
-  folders
+  folders,
+  onCreateCardType
 }: CreateCardModalProps) {
+  const [step, setStep] = useState<'select-type' | 'fill-details'>('select-type')
+  const [selectedCardType, setSelectedCardType] = useState<CardType | null>(null)
   const [name, setName] = useState('')
   const [summary, setSummary] = useState('')
   const [typeId, setTypeId] = useState('')
@@ -41,13 +74,27 @@ export default function CreateCardModal({
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      setStep('select-type')
+      setSelectedCardType(null)
       setName('')
       setSummary('')
-      setTypeId(cardTypes[0]?.id || '')
+      setTypeId('')
       setFolderId(selectedFolderId || null)
       setCoverImageUrl('')
     }
-  }, [isOpen, selectedFolderId, cardTypes])
+  }, [isOpen, selectedFolderId])
+
+  const handleCardTypeSelect = (cardType: CardType) => {
+    setSelectedCardType(cardType)
+    setTypeId(cardType.id)
+    setStep('fill-details')
+  }
+
+  const handleBackToTypeSelection = () => {
+    setStep('select-type')
+    setSelectedCardType(null)
+    setTypeId('')
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,136 +155,222 @@ export default function CreateCardModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Create New Card"
-      size="md"
+      title={step === 'select-type' ? 'Choose Card Type' : 'Create New Card'}
+      size={step === 'select-type' ? 'lg' : 'md'}
     >
       <ModalContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Card Name */}
-          <div>
-            <Label htmlFor="card-name" className="text-sm font-medium text-slate-200">
-              Name
-            </Label>
-            <Input
-              id="card-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter card name"
-              className="mt-1"
-              disabled={loading}
-              autoFocus
-            />
-          </div>
+        {step === 'select-type' ? (
+          // Step 1: Card Type Selection
+          <div className="space-y-4">
+            <p className="text-slate-400 text-sm">
+              Choose the type of card you want to create. Each type has its own set of fields and properties.
+            </p>
 
-          {/* Card Type */}
-          <div>
-            <Label className="text-sm font-medium text-slate-200">
-              Card Type
-            </Label>
-            <select
-              value={typeId}
-              onChange={(e) => setTypeId(e.target.value)}
-              disabled={loading}
-              className="mt-1 w-full h-10 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="">Select a card type</option>
-              {cardTypes.map((type) => (
-                <option key={type.id} value={type.id}>
-                  {type.name}
-                </option>
-              ))}
-            </select>
-          </div>
+            {/* Card Types Grid */}
+            {cardTypes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
+                {cardTypes.map((cardType) => (
+                  <button
+                    key={cardType.id}
+                    onClick={() => handleCardTypeSelect(cardType)}
+                    className="text-left p-4 rounded-lg border border-slate-600 hover:border-slate-500 hover:bg-slate-600 transition-colors group"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-white shrink-0"
+                        style={{ backgroundColor: cardType.color || '#6366f1' }}
+                      >
+                        {getIconComponent(cardType.icon || '📄', 'large')}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-slate-100 group-hover:text-white">
+                          {cardType.name}
+                        </h3>
+                        {cardType.description && (
+                          <p className="text-sm text-slate-400 mt-1 line-clamp-2">
+                            {cardType.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-2 mt-2">
+                          <span className="text-xs text-slate-500">
+                            {cardType.schema?.length || 0} fields
+                          </span>
+                          {cardType.card_count !== undefined && (
+                            <span className="text-xs text-slate-500">
+                              • {cardType.card_count} cards
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Settings className="h-12 w-12 text-slate-500 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-slate-100 mb-2">
+                  No card types available
+                </h3>
+                <p className="text-slate-400 mb-4">
+                  You need to create a card type before you can create cards.
+                </p>
+                {onCreateCardType && (
+                  <Button onClick={onCreateCardType}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Card Type
+                  </Button>
+                )}
+              </div>
+            )}
 
-          {/* Folder */}
-          <div>
-            <Label className="text-sm font-medium text-slate-200">
-              Folder <span className="text-slate-500 font-normal">(optional)</span>
-            </Label>
-            <select
-              value={folderId || 'none'}
-              onChange={(e) => setFolderId(e.target.value === 'none' ? null : e.target.value)}
-              disabled={loading}
-              className="mt-1 w-full h-10 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <option value="none">No folder (root level)</option>
-              {folders
-                .filter(folder => !folder.parent_id) // Only show root level folders for simplicity
-                .map((folder) => (
+            {/* Create New Card Type Option */}
+            {cardTypes.length > 0 && onCreateCardType && (
+              <div className="border-t border-slate-700 pt-4">
+                <button
+                  onClick={onCreateCardType}
+                  className="w-full p-3 rounded-lg border border-dashed border-slate-600 hover:border-slate-500 hover:bg-slate-700 transition-colors text-slate-400 hover:text-slate-300"
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <Plus className="h-4 w-4" />
+                    <span>Create New Card Type</span>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          // Step 2: Card Details Form
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Selected Card Type Display */}
+            {selectedCardType && (
+              <div className="flex items-center justify-between p-3 bg-slate-700 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white"
+                    style={{ backgroundColor: selectedCardType.color || '#6366f1' }}
+                  >
+                    {getIconComponent(selectedCardType.icon || '📄')}
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-slate-200">
+                      {selectedCardType.name}
+                    </span>
+                    <div className="text-xs text-slate-400">
+                      {selectedCardType.schema?.length || 0} fields
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBackToTypeSelection}
+                  disabled={loading}
+                >
+                  Change Type
+                </Button>
+              </div>
+            )}
+
+            {/* Card Name */}
+            <div>
+              <Label htmlFor="card-name" className="text-sm font-medium text-slate-200">
+                Name
+              </Label>
+              <Input
+                id="card-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter card name"
+                className="mt-1"
+                disabled={loading}
+                autoFocus
+              />
+            </div>
+
+            {/* Folder */}
+            <div>
+              <Label className="text-sm font-medium text-slate-200">
+                Folder <span className="text-slate-500 font-normal">(optional)</span>
+              </Label>
+              <select
+                value={folderId || 'none'}
+                onChange={(e) => setFolderId(e.target.value === 'none' ? null : e.target.value)}
+                disabled={loading}
+                className="mt-1 w-full h-10 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="none">No folder</option>
+                {folders.map((folder) => (
                   <option key={folder.id} value={folder.id}>
                     {folder.name}
                   </option>
                 ))}
-            </select>
-          </div>
+              </select>
+            </div>
 
-          {/* Summary */}
-          <div>
-            <Label htmlFor="card-summary" className="text-sm font-medium text-slate-200">
-              Summary <span className="text-slate-500 font-normal">(optional)</span>
-            </Label>
-            <Textarea
-              id="card-summary"
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              placeholder="Brief description of this card"
-              className="mt-1"
-              rows={3}
-              disabled={loading}
-            />
-          </div>
+            {/* Summary */}
+            <div>
+              <Label htmlFor="card-summary" className="text-sm font-medium text-slate-200">
+                Summary <span className="text-slate-500 font-normal">(optional)</span>
+              </Label>
+              <Textarea
+                id="card-summary"
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                placeholder="Brief description of this card"
+                className="mt-1"
+                rows={3}
+                disabled={loading}
+              />
+            </div>
 
-          {/* Cover Image URL */}
-          <div>
-            <Label htmlFor="cover-image-url" className="text-sm font-medium text-slate-200">
-              Cover Image URL <span className="text-slate-500 font-normal">(optional)</span>
-            </Label>
-            <Input
-              id="cover-image-url"
-              type="url"
-              value={coverImageUrl}
-              onChange={handleImageUrlChange}
-              placeholder="https://example.com/image.jpg"
-              className="mt-1"
-              disabled={loading}
-            />
-            {coverImageUrl && (
-              <div className="mt-2">
-                <img
-                  src={coverImageUrl}
-                  alt="Cover preview"
-                  className="w-20 h-20 object-cover rounded-lg border border-slate-600"
-                  onError={() => setCoverImageUrl('')}
-                />
+            {/* Cover Image URL */}
+            <div>
+              <Label htmlFor="cover-image-url" className="text-sm font-medium text-slate-200">
+                Cover Image URL <span className="text-slate-500 font-normal">(optional)</span>
+              </Label>
+              <Input
+                id="cover-image-url"
+                type="url"
+                value={coverImageUrl}
+                onChange={handleImageUrlChange}
+                placeholder="https://example.com/image.jpg"
+                className="mt-1"
+                disabled={loading}
+              />
+              <p className="text-xs text-slate-600">Use image URL for now</p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-between pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleBackToTypeSelection}
+                disabled={loading}
+              >
+                Back
+              </Button>
+              <div className="flex space-x-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onClose}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!name.trim() || !typeId || loading}
+                >
+                  {loading ? 'Creating...' : 'Create Card'}
+                </Button>
               </div>
-            )}
-          </div>
-
-          {/* Future: File Upload */}
-          <div className="border-2 border-dashed border-slate-600 rounded-lg p-4 text-center opacity-50">
-            <Upload className="h-8 w-8 text-slate-500 mx-auto mb-2" />
-            <p className="text-sm text-slate-500 mb-1">File upload coming soon</p>
-            <p className="text-xs text-slate-600">Use image URL for now</p>
-          </div>
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={!name.trim() || !typeId || loading}
-            >
-              {loading ? 'Creating...' : 'Create Card'}
-            </Button>
-          </div>
-        </form>
+            </div>
+          </form>
+        )}
       </ModalContent>
     </Modal>
   )

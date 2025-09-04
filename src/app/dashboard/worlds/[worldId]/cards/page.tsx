@@ -134,6 +134,10 @@ export default function CardsPage() {
     setEditingCard(null)
   }
 
+  const handleCreateCardType = () => {
+    router.push(`/dashboard/worlds/${worldId}/card-types`)
+  }
+
   const handleEditCard = (card: Card) => {
     setEditingCard(card)
     setShowEditModal(true)
@@ -339,6 +343,7 @@ export default function CardsPage() {
         selectedFolderId={selectedFolderId}
         cardTypes={cardTypes}
         folders={folders}
+        onCreateCardType={handleCreateCardType}
       />
 
       <EditCardModal

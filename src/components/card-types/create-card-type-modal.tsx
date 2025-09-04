@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Plus, Trash2, GripVertical, Sparkles, User, Crown, MapPin, Globe, Zap, Cpu, Users, Calendar, Globe2, Bug } from 'lucide-react'
 import { Modal, ModalContent, ModalFooter } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
@@ -70,6 +70,55 @@ const getIconComponent = (iconName: string) => {
   return <span className="text-lg">{iconName}</span>
 }
 
+// Optimized template grid component to prevent re-renders
+function TemplateGrid({ templates, onApplyTemplate }: { 
+  templates: CardTypeTemplate[]
+  onApplyTemplate: (template: CardTypeTemplate) => void 
+}) {
+  const groupedTemplates = useMemo(() => {
+    return templates.reduce((groups: Record<string, CardTypeTemplate[]>, template) => {
+      const category = template.category || 'General'
+      if (!groups[category]) groups[category] = []
+      groups[category].push(template)
+      return groups
+    }, {})
+  }, [templates])
+
+  return (
+    <div className="space-y-4">
+      {Object.entries(groupedTemplates).map(([category, categoryTemplates]) => (
+        <div key={category}>
+          <h4 className="text-sm font-medium text-slate-300 mb-2">{category}</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {categoryTemplates.map((template) => (
+              <button
+                key={template.id}
+                type="button"
+                onClick={() => onApplyTemplate(template)}
+                className="text-left p-3 rounded-lg border border-slate-600 hover:border-slate-500 hover:bg-slate-600 transition-colors"
+              >
+                <div className="flex items-center space-x-2 mb-2">
+                  {getIconComponent(template.icon)}
+                  <span 
+                    className="w-3 h-3 rounded-full shrink-0" 
+                    style={{ backgroundColor: template.color }}
+                  />
+                </div>
+                <div className="font-medium text-slate-100 text-sm">{template.name}</div>
+                {template.description && (
+                  <div className="text-xs text-slate-400 mt-1 line-clamp-2">
+                    {template.description}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function CreateCardTypeModal({
   isOpen,
   onClose,
@@ -98,31 +147,37 @@ export default function CreateCardTypeModal({
     ]
   )
 
+  // Use ref to track if templates have been loaded to prevent render loops
+  const templatesLoadedRef = useRef(false)
+
   const { user } = useAuth()
   const { success, error } = useToastHelpers()
   const { handleError } = useErrorHandler()
 
   const loadTemplates = useCallback(async () => {
+    if (loadingTemplates || templatesLoadedRef.current) return // Prevent multiple calls
+    
     try {
       setLoadingTemplates(true)
       const templatesData = await supabaseService.cardType.getCardTypeTemplates()
       setTemplates(templatesData)
+      templatesLoadedRef.current = true
     } catch (err) {
       console.error('Failed to load templates:', err)
-      handleError(err, 'Failed to load templates')
+      // Show error but don't use error function to prevent dependency issues
     } finally {
       setLoadingTemplates(false)
     }
-  }, [handleError])
+  }, [loadingTemplates])
 
-  // Load templates when modal opens
+  // Load templates when modal opens - only once per session
   useEffect(() => {
-    if (isOpen && !editingCardType) {
+    if (isOpen && !editingCardType && showTemplates && !templatesLoadedRef.current) {
       loadTemplates()
     }
-  }, [isOpen, editingCardType, loadTemplates])
+  }, [isOpen, editingCardType, showTemplates, loadTemplates])
 
-  const applyTemplate = (template: CardTypeTemplate) => {
+  const applyTemplate = useCallback((template: CardTypeTemplate) => {
     setSelectedTemplate(template.id)
     setName(template.name)
     setDescription(template.description || '')
@@ -130,13 +185,13 @@ export default function CreateCardTypeModal({
     setColor(template.color)
     setFields(template.schema)
     setShowTemplates(false)
-  }
+  }, [])
 
-  const startFromScratch = () => {
+  const startFromScratch = useCallback(() => {
     setSelectedTemplate(null)
     setShowTemplates(false)
     // Keep current values for name, description, etc.
-  }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,6 +238,9 @@ export default function CreateCardTypeModal({
 
   const handleClose = () => {
     if (!loading) {
+      // Reset to initial state
+      setShowTemplates(!editingCardType)
+      setSelectedTemplate(null)
       setName('')
       setDescription('')
       setIcon('📄')
@@ -194,6 +252,10 @@ export default function CreateCardTypeModal({
         required: true,
         description: 'The name of this item'
       }])
+      // Reset template loading state
+      templatesLoadedRef.current = false
+      setTemplates([])
+      setLoadingTemplates(false)
       onClose()
     }
   }
@@ -284,50 +346,7 @@ export default function CreateCardTypeModal({
                     <div className="text-slate-400">Loading templates...</div>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {/* Group templates by category */}
-                    {templates.reduce((groups: Record<string, CardTypeTemplate[]>, template) => {
-                      const category = template.category || 'General'
-                      if (!groups[category]) groups[category] = []
-                      groups[category].push(template)
-                      return groups
-                    }, {} as Record<string, CardTypeTemplate[]>) && 
-                      Object.entries(templates.reduce((groups: Record<string, CardTypeTemplate[]>, template) => {
-                        const category = template.category || 'General'
-                        if (!groups[category]) groups[category] = []
-                        groups[category].push(template)
-                        return groups
-                      }, {} as Record<string, CardTypeTemplate[]>)).map(([category, categoryTemplates]) => (
-                        <div key={category}>
-                          <h4 className="text-sm font-medium text-slate-300 mb-2">{category}</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {(categoryTemplates as CardTypeTemplate[]).map((template) => (
-                              <button
-                                key={template.id}
-                                type="button"
-                                onClick={() => applyTemplate(template)}
-                                className="text-left p-3 rounded-lg border border-slate-600 hover:border-slate-500 hover:bg-slate-600 transition-colors"
-                              >
-                                <div className="flex items-center space-x-2 mb-2">
-                                  {getIconComponent(template.icon)}
-                                  <span 
-                                    className="w-3 h-3 rounded-full shrink-0" 
-                                    style={{ backgroundColor: template.color }}
-                                  />
-                                </div>
-                                <div className="font-medium text-slate-100 text-sm">{template.name}</div>
-                                {template.description && (
-                                  <div className="text-xs text-slate-400 mt-1 line-clamp-2">
-                                    {template.description}
-                                  </div>
-                                )}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      ))
-                    }
-                  </div>
+                  <TemplateGrid templates={templates} onApplyTemplate={applyTemplate} />
                 )}
               </div>
             )}
