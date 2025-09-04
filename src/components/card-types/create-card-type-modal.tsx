@@ -131,21 +131,19 @@ export default function CreateCardTypeModal({
   const [templates, setTemplates] = useState<CardTypeTemplate[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [showTemplates, setShowTemplates] = useState(!editingCardType) // Show templates by default for new card types
-  const [name, setName] = useState(editingCardType?.name || '')
-  const [description, setDescription] = useState(editingCardType?.description || '')
-  const [icon, setIcon] = useState(editingCardType?.icon || '📄')
-  const [color, setColor] = useState(editingCardType?.color || generateColor())
-  const [fields, setFields] = useState<FieldSchema[]>(
-    editingCardType?.schema || [
-      {
-        key: 'name',
-        label: 'Name',
-        kind: 'text',
-        required: true,
-        description: 'The name of this item'
-      }
-    ]
-  )
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [icon, setIcon] = useState('📄')
+  const [color, setColor] = useState(generateColor())
+  const [fields, setFields] = useState<FieldSchema[]>([
+    {
+      key: 'name',
+      label: 'Name',
+      kind: 'text',
+      required: true,
+      description: 'The name of this item'
+    }
+  ])
 
   // Use ref to track if templates have been loaded to prevent render loops
   const templatesLoadedRef = useRef(false)
@@ -176,6 +174,40 @@ export default function CreateCardTypeModal({
       loadTemplates()
     }
   }, [isOpen, editingCardType, showTemplates, loadTemplates])
+
+  // Populate form when editing an existing card type
+  useEffect(() => {
+    if (editingCardType) {
+      setName(editingCardType.name)
+      setDescription(editingCardType.description || '')
+      setIcon(editingCardType.icon || '📄')
+      setColor(editingCardType.color || generateColor())
+      setFields(editingCardType.schema || [{
+        key: 'name',
+        label: 'Name',
+        kind: 'text',
+        required: true,
+        description: 'The name of this item'
+      }])
+      setShowTemplates(false) // Don't show templates when editing
+      setSelectedTemplate(null)
+    } else {
+      // Reset to defaults for new card type
+      setName('')
+      setDescription('')
+      setIcon('📄')
+      setColor(generateColor())
+      setFields([{
+        key: 'name',
+        label: 'Name',
+        kind: 'text',
+        required: true,
+        description: 'The name of this item'
+      }])
+      setShowTemplates(true) // Show templates for new card type
+      setSelectedTemplate(null)
+    }
+  }, [editingCardType])
 
   const applyTemplate = useCallback((template: CardTypeTemplate) => {
     setSelectedTemplate(template.id)
